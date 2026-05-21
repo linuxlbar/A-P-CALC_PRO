@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>A&P Calculator Pro</title>
-  
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#003366">
   <link rel="stylesheet" href="style.css">
@@ -12,11 +11,15 @@
 <body>
 
   <header>
-    <h1>A&P Calc</h1>
-    <nav class="tabs">
-      <button class="tab-btn active" data-target="module-wb">W&B</button>
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 1rem;">
+      <img src="icon-192.png" alt="App Icon" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+      <h1 style="margin-bottom: 0;">A&P Calculator</h1>
+    </div>
+    <nav class="tabs" style="overflow-x: auto; white-space: nowrap; display: flex; gap: 5px; padding-bottom: 5px;">
+      <button class="tab-btn active" data-target="module-wb">Weight & Balance</button>
       <button class="tab-btn" data-target="module-metal">Metal</button>
-      <button class="tab-btn" data-target="module-elec">Elec</button>
+      <button class="tab-btn" data-target="module-elec">Electricity</button>
+      <button class="tab-btn" data-target="module-math">Math</button>
     </nav>
   </header>
 
@@ -25,195 +28,200 @@
     <section class="calc-card" id="module-wb">
       <h2>Weight & Balance</h2>
       
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; margin-top: 1rem; border: 1px solid #d1d5db;">
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; margin-top: 1rem; border: 1px solid var(--border-color);">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">1. Single Item Solver</h3>
-        <p class="subtitle" style="margin-bottom: 15px;">Fill any 2 values (Weight × Arm = Moment)</p>
-        <div class="input-group">
-          <label for="wbWeight">Weight (lbs)</label>
-          <input type="number" id="wbWeight" placeholder="lbs" step="0.1">
-        </div>
-        <div class="input-group">
-          <label for="wbArm">Arm / CG (in)</label>
-          <input type="number" id="wbArm" placeholder="inches" step="0.1">
-        </div>
-        <div class="input-group">
-          <label for="wbMoment">Moment (in-lbs)</label>
-          <input type="number" id="wbMoment" placeholder="in-lbs" step="0.1">
-        </div>
+        <div class="input-group"><label>Weight (lbs)</label><input type="number" id="wbWeight" placeholder="lbs" step="0.1"></div>
+        <div class="input-group"><label>Arm / CG (in)</label><input type="number" id="wbArm" placeholder="inches" step="0.1"></div>
+        <div class="input-group"><label>Moment (in-lbs)</label><input type="number" id="wbMoment" placeholder="in-lbs" step="0.1"></div>
         <button id="calcWbBtn" class="action-btn">Calculate Missing Value</button>
         <button id="clearWbBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
-        <div class="result-display" style="margin-top: 15px; padding: 15px;">
-          <span id="wbResult" style="font-weight: bold; font-size: 1.1rem;">--</span>
-        </div>
+        <div class="result-display" style="margin-top: 15px; padding: 15px;"><span id="wbResult" style="font-weight: bold;">--</span></div>
       </div>
 
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid #d1d5db; margin-bottom: 2rem;">
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">2. Aircraft Total CG</h3>
-        <p class="subtitle" style="margin-bottom: 15px;">Moments calculate automatically.</p>
         <div id="cg-layers-container">
           <div class="cg-row" style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <input type="text" placeholder="Item" style="flex: 2; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="cg-weight" placeholder="W (lbs)" style="flex: 1.5; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="cg-arm" placeholder="A (in)" style="flex: 1.5; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-          </div>
-          <div class="cg-row" style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <input type="text" placeholder="Item" style="flex: 2; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="cg-weight" placeholder="W (lbs)" style="flex: 1.5; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="cg-arm" placeholder="A (in)" style="flex: 1.5; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
+            <input type="text" placeholder="Item" style="flex: 2; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;">
+            <input type="number" class="cg-weight" placeholder="W" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;">
+            <input type="number" class="cg-arm" placeholder="A" style="flex: 1.5; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); min-width: 0;">
           </div>
         </div>
-        <button id="addCgRowBtn" class="action-btn" style="background-color: var(--accent-color); padding: 0.8rem; margin-top: 5px; margin-bottom: 15px;">+ Add Station</button>
+        <button id="addCgRowBtn" class="action-btn" style="background-color: var(--accent-color);">+ Add Station</button>
         <button id="calcCgBtn" class="action-btn">Calculate Total CG</button>
-        <button id="clearCgBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear List</button>
-        <div class="result-display" style="text-align: left; margin-top: 15px;">
-          <p><strong>Total Weight:</strong> <span id="outCgWeight" style="color: var(--primary-color);">--</span> lbs</p>
-          <p style="margin-top: 5px;"><strong>Total Moment:</strong> <span id="outCgMoment" style="color: var(--primary-color);">--</span> in-lbs</p>
-          <hr style="margin: 15px 0; border: 0; border-top: 1px solid #c2d7f5;">
-          <p style="font-size: 1.3rem; font-weight: bold;">Aircraft CG: <span id="outCg" style="color: var(--primary-color);">--</span> in</p>
-        </div>
-      </div>
-
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; margin-top: 2rem; border: 1px solid #d1d5db; margin-bottom: 2rem;">
-        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">3. Ballast Shift Calculator</h3>
-        <p class="subtitle" style="margin-bottom: 15px;">Find weight needed to shift CG into limits.</p>
-        <div class="input-group">
-          <label for="balWeight">Current Aircraft Weight (lbs)</label>
-          <input type="number" id="balWeight" placeholder="e.g. 4954" step="0.1">
-        </div>
-        <div class="input-group">
-          <label for="balCurrentCg">Current CG (in)</label>
-          <input type="number" id="balCurrentCg" placeholder="e.g. 30.5" step="0.1">
-        </div>
-        <div class="input-group">
-          <label for="balTargetCg">Target CG (in)</label>
-          <input type="number" id="balTargetCg" placeholder="e.g. 32.0" step="0.1">
-        </div>
-        <div class="input-group">
-          <label for="balArm">Ballast Location / Arm (in)</label>
-          <input type="number" id="balArm" placeholder="e.g. 162" step="0.1">
-        </div>
-        <button id="calcBallastBtn" class="action-btn">Calculate Ballast</button>
-        <button id="clearBallastBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
         <div class="result-display" style="margin-top: 15px;">
-          <h3>Required Ballast:</h3>
-          <span id="balResult" style="font-weight: bold; font-size: 1.5rem; color: var(--primary-color);">--</span>
+          <p><strong>Total Weight:</strong> <span id="outCgWeight">--</span> lbs</p>
+          <p><strong>Aircraft CG:</strong> <span id="outCg">--</span> in</p>
         </div>
       </div>
 
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; margin-top: 2rem; border: 1px solid #d1d5db;">
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">3. Ballast Shift</h3>
+        <div class="input-group"><input type="number" id="balWeight" placeholder="Current Wt (lbs)"></div>
+        <div class="input-group"><input type="number" id="balCurrentCg" placeholder="Current CG (in)"></div>
+        <div class="input-group"><input type="number" id="balTargetCg" placeholder="Target CG (in)"></div>
+        <div class="input-group"><input type="number" id="balArm" placeholder="Ballast Arm (in)"></div>
+        <button id="calcBallastBtn" class="action-btn">Calculate Ballast</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Required Ballast:</strong> <span id="balResult">--</span></div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">4. Equipment Change (Alteration)</h3>
-        <p class="subtitle" style="margin-bottom: 15px;">Calculate new empty weight CG after part swaps.</p>
         <div style="background-color: #e8f0fe; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
-          <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: var(--primary-color);">Original Aircraft</h4>
+          <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Original Aircraft</h4>
           <div style="display: flex; gap: 10px;">
-            <input type="number" id="altOldWt" placeholder="Old Wt (lbs)" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" id="altOldCg" placeholder="Old CG (in)" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
+            <input type="number" id="altOldWt" placeholder="Old Wt (lbs)" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <input type="number" id="altOldCg" placeholder="Old CG (in)" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
           </div>
         </div>
+
         <div id="rem-container">
           <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: #b91c1c;">Removed Items (-)</h4>
           <div class="rem-row" style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <input type="number" class="rem-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="rem-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
+            <input type="number" class="rem-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <input type="number" class="rem-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
           </div>
         </div>
-        <button id="addRemBtn" class="action-btn" style="background-color: #ef4444; margin-bottom: 15px; padding: 0.5rem; width: 100%;">+ Add Removed Item</button>
+        <button id="addRemBtn" class="action-btn" style="background-color: #ef4444; margin-bottom: 15px;">+ Add Removed Item</button>
+
         <div id="add-container">
           <h4 style="font-size: 0.9rem; margin-bottom: 8px; color: #15803d;">Installed Items (+)</h4>
           <div class="add-row" style="display: flex; gap: 8px; margin-bottom: 8px;">
-            <input type="number" class="add-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
-            <input type="number" class="add-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: 8px; border: 1px solid #d1d5db; min-width: 0;">
+            <input type="number" class="add-wt" placeholder="Wt" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <input type="number" class="add-arm" placeholder="Arm" style="flex: 1; padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
           </div>
         </div>
-        <button id="addAddBtn" class="action-btn" style="background-color: #22c55e; margin-bottom: 15px; padding: 0.5rem; width: 100%;">+ Add Installed Item</button>
-        <button id="calcAltBtn" class="action-btn" style="width: 100%;">Calculate Alteration</button>
-        <button id="clearAltBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px; width: 100%;">Clear</button>
-        <div class="result-display" style="margin-top: 15px; text-align: left;">
-          <p><strong>New Empty Wt:</strong> <span id="altResWt" style="color: var(--primary-color);">--</span> lbs</p>
-          <hr style="margin: 10px 0; border: 0; border-top: 1px solid #c2d7f5;">
-          <p style="font-size: 1.2rem; font-weight: bold;">New EWCG: <span id="altResCg" style="color: var(--primary-color);">--</span> in</p>
+        <button id="addAddBtn" class="action-btn" style="background-color: #22c55e; margin-bottom: 15px;">+ Add Installed Item</button>
+        
+        <button id="calcAltBtn" class="action-btn">Calculate Alteration</button>
+        <button id="clearAltBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
+        <div class="result-display" style="margin-top: 15px;">
+          <p><strong>New Empty Wt:</strong> <span id="altResWt">--</span> lbs</p>
+          <p><strong>New EWCG:</strong> <span id="altResCg">--</span> in</p>
         </div>
       </div>
     </section>
 
     <section class="calc-card" id="module-metal" style="display: none;">
       <h2>Sheet Metal Layout</h2>
-      <p class="subtitle">Rivet Sizing & Spacing</p>
-      <div id="layers-container">
-        <div class="input-group">
-          <label>Layer 1 Thickness (in)</label>
-          <input type="number" class="layer-input" placeholder="e.g. 0.040" step="0.001">
+      
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Dash Specs & Drill Sizes</h3>
+        <div id="layers-container">
+          <div class="input-group"><label>Layer 1 Thickness</label><input type="number" class="layer-input" step="0.001"></div>
+          <div class="input-group"><label>Layer 2 Thickness</label><input type="number" class="layer-input" step="0.001"></div>
         </div>
-        <div class="input-group">
-          <label>Layer 2 Thickness (in)</label>
-          <input type="number" class="layer-input" placeholder="e.g. 0.032" step="0.001">
+        <button id="addLayerBtn" class="action-btn" style="background-color: var(--accent-color); margin-bottom: 10px;">+ Layer</button>
+        <button id="calcMetalBtn" class="action-btn">Calculate Specs</button>
+        
+        <div class="result-display" style="margin-top: 15px; text-align: left; padding: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Diameter: <strong id="outDiaDash">--</strong></span>
+            <span>Length: <strong id="outLenDash">--</strong></span>
+          </div>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.95rem;">
+            <span>Pilot Drill: <strong id="outPilot" style="color: var(--primary-color);">--</strong></span>
+            <span>Final Drill: <strong id="outFinal" style="color: var(--primary-color);">--</strong></span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--success-text); margin-bottom: 8px;">Cleco Color: <strong id="outCleco">--</strong></p>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <p style="font-size: 0.9rem; margin-bottom: 4px;"><strong>Minimum Edge Distance (ED)</strong></p>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+            <span>Universal (2D): <strong id="outUnivED">--</strong></span>
+            <span>Flush (2.5D): <strong id="outFlushED">--</strong></span>
+          </div>
         </div>
       </div>
-      <button id="addLayerBtn" class="action-btn" style="background-color: var(--accent-color); margin-top: 0; margin-bottom: 1.5rem; padding: 0.8rem;">+ Add Another Layer</button>
-      <div class="input-group">
-        <label for="rowLength">Total Row Length (in)</label>
-        <input type="number" id="rowLength" placeholder="e.g. 10" step="0.1">
-      </div>
-      <div class="input-group">
-        <label for="rivetCount">Number of Rivets in Row</label>
-        <input type="number" id="rivetCount" placeholder="e.g. 8" step="1">
-      </div>
-      <button id="calcMetalBtn" class="action-btn">Calculate Specs</button>
-      <button id="clearMetalBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
-      <div class="result-display" style="text-align: left;">
-        <h3 style="text-align: center;">Rivet Selection</h3>
-        <p style="margin-top: 10px;"><strong>Diameter (-Dash):</strong> <span id="outDiaDash" style="color: var(--primary-color); font-weight: bold;">--</span></p>
-        <p style="margin-top: 10px;"><strong>Length (-Dash):</strong> <span id="outLenDash" style="color: var(--primary-color); font-weight: bold;">--</span></p>
-        <p style="margin-top: 10px;"><strong>Drill Sizes:</strong> <span id="outDrill" style="color: var(--primary-color); font-weight: bold;">--</span></p>
-        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #c2d7f5;">
-        <h3 style="text-align: center;">Layout & Spacing</h3>
-        <p style="margin-top: 10px;"><strong>Total Grip:</strong> <span id="outGrip" style="color: var(--primary-color); font-weight: bold;">--</span> in</p>
-        <p style="margin-top: 10px;"><strong>Edge Distance (ED):</strong> <span id="outED" style="color: var(--primary-color); font-weight: bold;">--</span> in</p>
-        <p style="margin-top: 10px;"><strong>Even Spacing (Pitch):</strong> <span id="outEvenPitch" style="color: var(--primary-color); font-weight: bold;">--</span> in</p>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; font-weight: 600;" id="pitchWarning"></p>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Even Rivet Spacing</h3>
+        <div class="input-group"><label>Total Length (in)</label><input type="number" id="rivetLen" placeholder="e.g., 10"></div>
+        <div class="input-group"><label>Edge Distance (in)</label><input type="number" id="rivetED" placeholder="e.g., 0.25"></div>
+        <div class="input-group"><label>Number of Rivets</label><input type="number" id="rivetCount" placeholder="e.g., 6"></div>
+        <button id="calcRivetBtn" class="action-btn">Calculate Pitch</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Pitch (Spacing): </strong><span id="rivetPitchOut">--</span> in</div>
       </div>
     </section>
 
     <section class="calc-card" id="module-elec" style="display: none;">
       <h2>Electrical Systems</h2>
-      <p class="subtitle">Ohm's & Watt's Law (Fill any 2 values)</p>
-      <div class="input-group">
-        <label for="voltsInput">Voltage (E)</label>
-        <input type="number" id="voltsInput" placeholder="Volts" step="0.1">
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Ohm's & Watt's Law</h3>
+        <div class="input-group"><label>Volts (E)</label><input type="number" id="voltsInput" placeholder="Volts"></div>
+        <div class="input-group"><label>Amps (I)</label><input type="number" id="ampsInput" placeholder="Amps"></div>
+        <div class="input-group"><label>Ohms (R)</label><input type="number" id="ohmsInput" placeholder="Ohms"></div>
+        <div class="input-group"><label>Watts (P)</label><input type="number" id="wattsInput" placeholder="Watts"></div>
+        <button id="calcElecBtn" class="action-btn">Calculate All</button>
       </div>
-      <div class="input-group">
-        <label for="ampsInput">Current (I)</label>
-        <input type="number" id="ampsInput" placeholder="Amps" step="0.1">
-      </div>
-      <div class="input-group">
-        <label for="ohmsInput">Resistance (R)</label>
-        <input type="number" id="ohmsInput" placeholder="Ohms" step="0.1">
-      </div>
-      <div class="input-group">
-        <label for="wattsInput">Power (P)</label>
-        <input type="number" id="wattsInput" placeholder="Watts" step="0.1">
-      </div>
-      <button id="calcElecBtn" class="action-btn">Calculate All</button>
-      <button id="clearElecBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
-      <div class="result-display">
-        <h3>Calculated Results:</h3>
-        <span id="elecResult">--</span>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Load Comparison Tool</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Convert multi-part problems into direct Watts.</p>
+        <div class="input-group">
+            <select id="loadType" style="padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); width: 100%;">
+                <option value="ea">Volts & Amps (P = E × I)</option>
+                <option value="eff">Motor Efficiency (HP & Eff)</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label id="loadLabelA">Volts (E)</label>
+            <input type="number" id="loadA" placeholder="e.g., 24">
+        </div>
+        <div class="input-group">
+            <label id="loadLabelB">Amps (I)</label>
+            <input type="number" id="loadB" placeholder="e.g., 3">
+        </div>
+        <button id="calcLoadBtn" class="action-btn">Calculate Watts</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Result: </strong><span id="loadRes">--</span> W</div>
       </div>
     </section>
+
+    <section class="calc-card" id="module-math" style="display: none;">
+      <h2>General Math Tools</h2>
+      
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Expression Evaluator</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Type equations normally (e.g., <code>(5/16) * 12 + 4.5</code>)</p>
+        <div class="input-group"><input type="text" id="mathExpr" placeholder="Enter expression..."></div>
+        <button id="calcExprBtn" class="action-btn">Calculate</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Result: </strong><span id="exprRes">--</span></div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Fraction ↔ Decimal</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Enter a decimal (<code>0.125</code>) OR a fraction (<code>1/8</code>)</p>
+        <div class="input-group"><input type="text" id="fracDecInput" placeholder="e.g., 0.125 or 1/8"></div>
+        <button id="convFracBtn" class="action-btn">Convert</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Converted: </strong><span id="fracRes">--</span></div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Proportions & Ratios</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Fill in 3 boxes to solve for the empty one (A/B = C/D)</p>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; justify-content: center;">
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <input type="number" id="propA" placeholder="A" style="width: 80px; padding: 0.5rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <hr style="border-top: 2px solid #333; margin: 0;">
+            <input type="number" id="propB" placeholder="B" style="width: 80px; padding: 0.5rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          </div>
+          <span style="font-size: 1.5rem; font-weight: bold;">=</span>
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <input type="number" id="propC" placeholder="C" style="width: 80px; padding: 0.5rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <hr style="border-top: 2px solid #333; margin: 0;">
+            <input type="number" id="propD" placeholder="D" style="width: 80px; padding: 0.5rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+          </div>
+        </div>
+        <button id="calcPropBtn" class="action-btn">Solve Ratio</button>
+      </div>
+    </section>
+
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(registration => console.log('Offline engine engaged:', registration.scope))
-          .catch(error => console.log('Offline engine failed:', error));
-      });
-    }
-  </script>
-  <footer style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.8rem;">
+  <footer>
     <p>Guided AI Development By: Logan Barker</p>
   </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
