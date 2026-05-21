@@ -2,7 +2,7 @@
   "name": "A&P Calculator Pro",
   "short_name": "A&P Calc",
   "description": "Offline calculators and tools for Aviation Maintenance Technicians.",
-  "start_url": "/A-P-CALC_PRO/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
