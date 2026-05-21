@@ -1,0 +1,167 @@
+/* --- Global Variables --- */
+:root {
+  --primary-color: #003366; /* Aviation Blue */
+  --accent-color: #ff9900;  /* High-visibility Orange */
+  --bg-color: #f4f6f8;      /* Light gray to reduce glare */
+  --card-bg: #ffffff;
+  --text-main: #333333;
+  --text-muted: #666666;
+  --border-radius: 12px;
+}
+
+/* --- Base Reset & Typography --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Disables the blue tap highlight on mobile devices */
+  -webkit-tap-highlight-color: transparent; 
+}
+
+body {
+  /* Uses the phone's native operating system font for a true app feel */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  /* Smooths font rendering on mobile screens */
+  -webkit-font-smoothing: antialiased; 
+}
+
+/* --- Header & Navigation --- */
+header {
+  background-color: var(--primary-color);
+  color: white;
+  padding-top: 1.5rem; /* Safe area for status bar */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.tabs {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.2); /* Darkens the nav bar slightly */
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 1rem 0;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  color: white;
+  border-bottom: 3px solid var(--accent-color);
+}
+
+/* --- Main Layout & Cards --- */
+#app-container {
+  padding: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto; /* Keeps it centered if opened on a desktop */
+}
+
+.calc-card {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.calc-card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Forms & Inputs --- */
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.25rem;
+}
+
+.input-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.input-group input {
+  padding: 0.9rem;
+  font-size: 1.1rem; /* Large text is easier to read at arm's length */
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #fafafa;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input-group input:focus {
+  border-color: var(--primary-color);
+  background-color: #ffffff;
+}
+
+/* --- Buttons --- */
+.action-btn {
+  width: 100%;
+  padding: 1.1rem;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 51, 102, 0.2);
+}
+
+/* Adds a satisfying "press" effect when tapped */
+.action-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0, 51, 102, 0.2);
+}
+
+/* --- Results Display --- */
+.result-display {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #e8f0fe; /* Very light blue */
+  border: 1px solid #c2d7f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.result-display h3 {
+  font-size: 1rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#resultOutput {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+/* Forces flexbox inputs to shrink and respect container boundaries */
+.cg-row input {
+  min-width: 0;
+}
