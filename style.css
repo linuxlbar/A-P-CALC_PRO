@@ -344,3 +344,9 @@ footer {
 .ref-item img {
   cursor: zoom-in;
 }
+
+/* Prevent text highlighting while dragging on PC */
+.tabs, .sub-tabs {
+  user-select: none;
+  -webkit-user-select: none; 
+}

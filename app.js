@@ -406,3 +406,363 @@ document.body.addEventListener('click', function(e) {
         document.body.style.overflow = ''; // Restore background scrolling
     }
 });
+
+// --- 8. MEASUREMENT VISUALIZER LOGIC ---
+const rulerTicks = document.getElementById('rulerTicks');
+const measureInput = document.getElementById('measureInput');
+const rulerMarker = document.getElementById('rulerMarker');
+const markerLabel = document.getElementById('markerLabel');
+const exactDecOut = document.getElementById('exactDecOut');
+const exactFracOut = document.getElementById('exactFracOut');
+const rulerScaleSelect = document.getElementById('rulerScaleSelect');
+
+// Function to draw dynamic ticks based on scale
+function drawRuler(divisions) {
+    rulerTicks.innerHTML = ''; 
+    
+    for (let i = 0; i <= divisions; i++) {
+        const tick = document.createElement('div');
+        let tickHeight = '15%'; 
+        
+        if (divisions === 10) {
+            // Decimal Machinist Scale (10ths)
+            if (i % 10 === 0) tickHeight = '100%';
+            else if (i % 5 === 0) tickHeight = '50%';
+            else tickHeight = '25%';
+        } else {
+            // Standard Imperial Fractional Scales (16, 32, 64)
+            const ratio = 64 / divisions;
+            const normalizedTick = i * ratio; 
+            
+            if (normalizedTick === 0 || normalizedTick === 64) tickHeight = '100%';
+            else if (normalizedTick % 32 === 0) tickHeight = '70%'; // 1/2 marks
+            else if (normalizedTick % 16 === 0) tickHeight = '50%'; // 1/4 marks
+            else if (normalizedTick % 8 === 0) tickHeight = '35%';  // 1/8 marks
+            else if (normalizedTick % 4 === 0) tickHeight = '25%';  // 1/16 marks
+            else if (normalizedTick % 2 === 0) tickHeight = '15%';  // 1/32 marks
+            else tickHeight = '10%'; // 1/64 marks
+        }
+
+        tick.style.cssText = `position: absolute; bottom: 0; left: ${(i / divisions) * 100}%; width: 2px; height: ${tickHeight}; background-color: var(--text-main); transform: translateX(-50%);`;
+
+        // Add text labels
+        if (divisions === 10) {
+            if (i > 0 && i < 10) {
+                const label = document.createElement('span');
+                label.textContent = `.${i}`;
+                label.style.cssText = `position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-muted);`;
+                tick.appendChild(label);
+            }
+        } else {
+            const eighthStep = divisions / 8;
+            if (i % eighthStep === 0) {
+                const label = document.createElement('span');
+                label.textContent = i === 0 ? '0' : (i === divisions ? '1"' : `${i/eighthStep}/8`);
+                label.style.cssText = `position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-muted);`;
+                tick.appendChild(label);
+            }
+        }
+        rulerTicks.appendChild(tick);
+    }
+}
+
+// Draw initial ruler
+drawRuler(parseInt(rulerScaleSelect.value));
+
+// Redraw when dropdown changes
+rulerScaleSelect.addEventListener('change', (e) => {
+    drawRuler(parseInt(e.target.value));
+});
+
+// Greatest Common Divisor for fraction reduction
+function getGCD(a, b) { return b ? getGCD(b, a % b) : a; }
+
+// Handle user input and place marker exactly
+measureInput.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    let decimalValue = NaN;
+    let exactFraction = "--";
+
+    if (val.includes('/')) {
+        const parts = val.split('/');
+        if (parts.length === 2) {
+            const num = parseFloat(parts[0]);
+            const den = parseFloat(parts[1]);
+            if (den !== 0) {
+                decimalValue = num / den;
+                const divisor = getGCD(num, den);
+                exactFraction = `${num/divisor}/${den/divisor}"`;
+            }
+        }
+    } else {
+        decimalValue = parseFloat(val);
+        if (!isNaN(decimalValue)) {
+            // Convert exact decimal to exact fraction
+            const len = decimalValue.toString().split('.')[1] ? decimalValue.toString().split('.')[1].length : 0;
+            const denominator = Math.pow(10, len);
+            const numerator = decimalValue * denominator;
+            const divisor = getGCD(numerator, denominator);
+            if (denominator/divisor <= 1000) { // Keep fractions readable
+                exactFraction = `${numerator/divisor}/${denominator/divisor}"`;
+            } else {
+                exactFraction = "N/A (Complex)";
+            }
+        }
+    }
+
+    if (!isNaN(decimalValue) && decimalValue >= 0 && decimalValue <= 1) {
+        rulerMarker.style.display = 'block';
+        rulerMarker.style.left = `${decimalValue * 100}%`; // Placed exactly
+        markerLabel.textContent = `${decimalValue.toFixed(4)}"`;
+        exactDecOut.textContent = `${decimalValue.toFixed(4)}"`;
+        exactFracOut.textContent = exactFraction;
+    } else {
+        rulerMarker.style.display = 'none';
+        exactDecOut.textContent = '--';
+        exactFracOut.textContent = '--';
+    }
+});
+
+// --- 9. PC DRAG-TO-SCROLL LOGIC ---
+function enableDragScroll(containerSelector) {
+    const slider = document.querySelector(containerSelector);
+    if (!slider) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = ''; // Revert to default
+    });
+
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = ''; // Revert to default
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault(); // Prevents the browser from highlighting text while dragging
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2; // The * 2 determines scroll speed
+        slider.scrollLeft = scrollLeft - walk;
+    });
+}
+
+// Apply to main navigation and reference sub-navigation
+enableDragScroll('.tabs');
+enableDragScroll('.sub-tabs');
+
+// --- 6. PHYSICS MODULE LOGIC ---
+
+// Helper function to allow both decimals and fractions in inputs
+function parseFractionInput(val) {
+    if (!val || val.trim() === '') return NaN;
+    if (val.includes('/')) {
+        const parts = val.split('/');
+        if (parts.length === 2 && parseFloat(parts[1]) !== 0) {
+            return parseFloat(parts[0]) / parseFloat(parts[1]);
+        }
+    }
+    return parseFloat(val);
+}
+
+// Pascal's Law (Hydraulics)
+document.getElementById('calcPascalBtn').addEventListener('click', () => {
+    const fInput = document.getElementById('physForce');
+    const pInput = document.getElementById('physPressure');
+    const aInput = document.getElementById('physArea');
+
+    const f = parseFloat(fInput.value);
+    const p = parseFloat(pInput.value);
+    const a = parseFloat(aInput.value);
+
+    const count = [!isNaN(f), !isNaN(p), !isNaN(a)].filter(Boolean).length;
+    
+    if (count !== 2) {
+        alert("Enter exactly 2 values to solve for the 3rd.");
+        return;
+    }
+
+    if (isNaN(f)) fInput.value = (p * a).toFixed(2);
+    else if (isNaN(p)) pInput.value = (f / a).toFixed(2);
+    else if (isNaN(a)) aInput.value = (f / p).toFixed(4);
+});
+
+// Mechanical Work (Force x Distance)
+document.getElementById('calcWorkBtn').addEventListener('click', () => {
+    const fInput = document.getElementById('physWorkForce');
+    const dInput = document.getElementById('physWorkDist');
+    const wInput = document.getElementById('physWorkOut');
+
+    const f = parseFloat(fInput.value);
+    const d = parseFloat(dInput.value);
+    const w = parseFloat(wInput.value);
+
+    // Count how many boxes have numbers in them
+    const count = [!isNaN(f), !isNaN(d), !isNaN(w)].filter(Boolean).length;
+    
+    if (count !== 2) {
+        alert("Enter exactly 2 values to solve for the 3rd.");
+        return;
+    }
+
+    // Solve for the empty box
+    if (isNaN(f)) fInput.value = (w / d).toFixed(2);
+    else if (isNaN(d)) dInput.value = (w / f).toFixed(2);
+    else if (isNaN(w)) wInput.value = (f * d).toFixed(2);
+});
+
+// Hydraulic Displacement (Area & Distance)
+document.getElementById('calcDispBtn').addEventListener('click', () => {
+    const a1Input = document.getElementById('physA1');
+    const d1Input = document.getElementById('physD1');
+    const a2Input = document.getElementById('physA2');
+    const d2Input = document.getElementById('physD2');
+
+    const a1 = parseFractionInput(a1Input.value);
+    const d1 = parseFractionInput(d1Input.value);
+    const a2 = parseFractionInput(a2Input.value);
+    const d2 = parseFractionInput(d2Input.value);
+
+    const count = [!isNaN(a1), !isNaN(d1), !isNaN(a2), !isNaN(d2)].filter(Boolean).length;
+
+    if (count !== 3) {
+        alert("Enter exactly 3 values to solve for the 4th.");
+        return;
+    }
+
+    if (isNaN(a1)) a1Input.value = ((a2 * d2) / d1).toFixed(4);
+    else if (isNaN(d1)) d1Input.value = ((a2 * d2) / a1).toFixed(4);
+    else if (isNaN(a2)) a2Input.value = ((a1 * d1) / d2).toFixed(4);
+    else if (isNaN(d2)) d2Input.value = ((a1 * d1) / a2).toFixed(4);
+});
+
+document.getElementById('clearDispBtn').addEventListener('click', () => {
+    document.getElementById('physA1').value = '';
+    document.getElementById('physD1').value = '';
+    document.getElementById('physA2').value = '';
+    document.getElementById('physD2').value = '';
+});
+
+// Double-Acting Actuating Cylinder Logic
+document.getElementById('calcCylBtn').addEventListener('click', () => {
+    const p = parseFloat(document.getElementById('cylPress').value);
+    const aPist = parseFloat(document.getElementById('cylPistArea').value);
+    const aRod = parseFloat(document.getElementById('cylRodArea').value);
+
+    // Validate inputs
+    if (isNaN(p) || isNaN(aPist) || isNaN(aRod)) {
+        alert("Please enter System Pressure, Piston Area, and Rod Area.");
+        return;
+    }
+
+    if (aRod >= aPist) {
+        alert("Error: The rod area must be smaller than the overall piston area.");
+        return;
+    }
+
+    // Calculate forces
+    const extForce = p * aPist;
+    const retForce = p * (aPist - aRod);
+
+    // Output formatted with commas for easy reading (e.g. 6,000)
+    document.getElementById('cylExtOut').textContent = extForce.toLocaleString() + ' lbs';
+    document.getElementById('cylRetOut').textContent = retForce.toLocaleString() + ' lbs';
+});
+
+// Mechanical Advantage
+document.getElementById('calcIncBtn').addEventListener('click', () => {
+    const f = parseFloat(document.getElementById('physIncForce').value);
+    const l = parseFloat(document.getElementById('physIncLen').value);
+    const w = parseFloat(document.getElementById('physIncWt').value);
+    const h = parseFloat(document.getElementById('physIncHt').value);
+
+    // Formula: F * L = W * H
+    const count = [!isNaN(f), !isNaN(l), !isNaN(w), !isNaN(h)].filter(Boolean).length;
+    
+    if (count !== 3) {
+        alert("Enter exactly 3 values to solve for the 4th.");
+        return;
+    }
+
+    if (isNaN(f)) document.getElementById('physIncForce').value = ((w * h) / l).toFixed(2);
+    else if (isNaN(l)) document.getElementById('physIncLen').value = ((w * h) / f).toFixed(2);
+    else if (isNaN(w)) document.getElementById('physIncWt').value = ((f * l) / h).toFixed(2);
+    else if (isNaN(h)) document.getElementById('physIncHt').value = ((f * l) / w).toFixed(2);
+});
+
+// --- 11. TEMPERATURE CONVERTER LOGIC ---
+const tempF = document.getElementById('tempF');
+const tempC = document.getElementById('tempC');
+const tempK = document.getElementById('tempK');
+const tempR = document.getElementById('tempR');
+
+function updateTemps(source) {
+    let f, c, k, r;
+    
+    // Convert source to Fahrenheit first to create a common base
+    if (source === 'f') {
+        f = parseFloat(tempF.value);
+    } else if (source === 'c') {
+        c = parseFloat(tempC.value);
+        f = (c * 9/5) + 32;
+    } else if (source === 'k') {
+        k = parseFloat(tempK.value);
+        f = (k - 273.15) * 9/5 + 32;
+    } else if (source === 'r') {
+        r = parseFloat(tempR.value);
+        f = r - 459.67;
+    }
+
+    // Now calculate all others from F
+    if (!isNaN(f)) {
+        c = (f - 32) * 5/9;
+        k = (f - 32) * 5/9 + 273.15;
+        r = f + 459.67;
+
+        if (source !== 'f') tempF.value = f.toFixed(1);
+        if (source !== 'c') tempC.value = c.toFixed(1);
+        if (source !== 'k') tempK.value = k.toFixed(1);
+        if (source !== 'r') tempR.value = r.toFixed(1);
+    } else {
+        if (source !== 'f') tempF.value = '';
+        if (source !== 'c') tempC.value = '';
+        if (source !== 'k') tempK.value = '';
+        if (source !== 'r') tempR.value = '';
+    }
+}
+
+tempF.addEventListener('input', () => updateTemps('f'));
+tempC.addEventListener('input', () => updateTemps('c'));
+tempK.addEventListener('input', () => updateTemps('k'));
+tempR.addEventListener('input', () => updateTemps('r'));
+
+document.getElementById('clearTempBtn').addEventListener('click', () => {
+    tempF.value = tempC.value = tempK.value = tempR.value = '';
+});
+
+// BMEP Calculator
+document.getElementById('calcBmepBtn').addEventListener('click', () => {
+    const hp = parseFloat(document.getElementById('bmepHp').value);
+    const rpm = parseFloat(document.getElementById('bmepRpm').value);
+    const disp = parseFloat(document.getElementById('bmepDisp').value);
+
+    if (isNaN(hp) || isNaN(rpm) || isNaN(disp)) {
+        alert("Please enter all three values.");
+        return;
+    }
+
+    // BMEP formula: (HP * 792,000) / (RPM * Displacement)
+    const bmep = (hp * 792000) / (rpm * disp);
+    document.getElementById('bmepOut').textContent = bmep.toFixed(1);
+});
