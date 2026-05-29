@@ -40,6 +40,7 @@ document.getElementById('calcWbBtn').addEventListener('click', () => {
         res.textContent = "Moment: " + (w * a).toFixed(2);
     }
 });
+
 document.getElementById('clearWbBtn').addEventListener('click', () => {
     document.getElementById('wbWeight').value = '';
     document.getElementById('wbArm').value = '';
@@ -115,12 +116,11 @@ document.getElementById('calcAltBtn').addEventListener('click', () => {
     document.getElementById('altResWt').textContent = newW.toFixed(2);
     document.getElementById('altResCg').textContent = (newM / newW).toFixed(2);
 });
+
 document.getElementById('clearAltBtn').addEventListener('click', () => location.reload());
 
 
 // --- 3. SHEET METAL MODULE ---
-
-// Add Layer Button
 document.getElementById('addLayerBtn').addEventListener('click', () => {
     const count = document.querySelectorAll('.layer-input').length + 1;
     const div = document.createElement('div');
@@ -129,7 +129,6 @@ document.getElementById('addLayerBtn').addEventListener('click', () => {
     document.getElementById('layers-container').appendChild(div);
 });
 
-// Dash Specs & Drills
 document.getElementById('calcMetalBtn').addEventListener('click', () => {
     let tMax = 0, tTotal = 0;
     document.querySelectorAll('.layer-input').forEach(i => { 
@@ -143,49 +142,20 @@ document.getElementById('calcMetalBtn').addEventListener('click', () => {
     if (dashDia < 3) dashDia = 3; 
     
     let d = dashDia / 32;
+    let pilotDrill = "--", finalDrill = "--", cleco = "--";
     
-    let pilotDrill = "--";
-    let finalDrill = "--";
-    let cleco = "--";
-    
-    // Explicit Pilot and Final definitions
     switch(dashDia) {
-        case 3: 
-            pilotDrill = "N/A"; 
-            finalDrill = "#40"; 
-            cleco = "Silver / White"; 
-            break;
-        case 4: 
-            pilotDrill = '1/8"'; 
-            finalDrill = "#30"; 
-            cleco = "Copper"; 
-            break;
-        case 5: 
-            pilotDrill = '1/8"'; 
-            finalDrill = "#21"; 
-            cleco = "Black"; 
-            break;
-        case 6: 
-            pilotDrill = "#30"; 
-            finalDrill = "#11"; 
-            cleco = "Brass"; 
-            break;
-        case 8: 
-            pilotDrill = "#30"; 
-            finalDrill = 'Letter "F" (1/4")'; 
-            cleco = "Copper / Green"; 
-            break;
-        default: 
-            pilotDrill = "--"; 
-            finalDrill = "Check Manual"; 
-            cleco = "N/A";
+        case 3: pilotDrill = "N/A"; finalDrill = "#40"; cleco = "Silver / White"; break;
+        case 4: pilotDrill = '1/8"'; finalDrill = "#30"; cleco = "Copper"; break;
+        case 5: pilotDrill = '1/8"'; finalDrill = "#21"; cleco = "Black"; break;
+        case 6: pilotDrill = "#30"; finalDrill = "#11"; cleco = "Brass"; break;
+        case 8: pilotDrill = "#30"; finalDrill = 'Letter "F" (1/4")'; cleco = "Copper / Green"; break;
+        default: pilotDrill = "--"; finalDrill = "Check Manual"; cleco = "N/A";
     }
 
-    // Edge Distance Math
     let univED = d * 2;
     let flushED = d * 2.5;
 
-    // Output specs
     document.getElementById('outDiaDash').textContent = `-${dashDia} (${d.toFixed(3)}")`;
     document.getElementById('outLenDash').textContent = `-${Math.round((tTotal + (1.5 * d)) * 16)}`;
     document.getElementById('outPilot').textContent = pilotDrill;
@@ -193,18 +163,15 @@ document.getElementById('calcMetalBtn').addEventListener('click', () => {
     document.getElementById('outCleco').textContent = cleco;
     document.getElementById('outUnivED').textContent = univED.toFixed(3) + '"';
     document.getElementById('outFlushED').textContent = flushED.toFixed(3) + '"';
-
-    // UX Feature: Auto-fill the ED input in the Rivet Spacing tool
     document.getElementById('rivetED').value = univED.toFixed(3);
 });
 
-// Rivet Spacing Calculator
 document.getElementById('calcRivetBtn').addEventListener('click', () => {
     const len = parseFloat(document.getElementById('rivetLen').value);
     const ed = parseFloat(document.getElementById('rivetED').value);
     let count = parseFloat(document.getElementById('rivetCount').value);
     
-    if (isNaN(count)) count = 6; // Default to standard layout
+    if (isNaN(count)) count = 6;
 
     if (isNaN(len) || isNaN(ed) || count < 2) {
         document.getElementById('rivetPitchOut').textContent = "Error"; return;
@@ -222,7 +189,9 @@ document.getElementById('calcElecBtn').addEventListener('click', () => {
     const r = parseFloat(document.getElementById('ohmsInput').value);
     const p = parseFloat(document.getElementById('wattsInput').value);
     const count = [!isNaN(v), !isNaN(i), !isNaN(r), !isNaN(p)].filter(Boolean).length;
+    
     if (count !== 2) { alert("Enter exactly 2 values"); return; }
+    
     let cv, ci, cr, cp;
     if (!isNaN(v) && !isNaN(i)) { cv=v; ci=i; cr=v/i; cp=v*i; }
     else if (!isNaN(v) && !isNaN(r)) { cv=v; cr=r; ci=v/r; cp=(v*v)/r; }
@@ -230,41 +199,19 @@ document.getElementById('calcElecBtn').addEventListener('click', () => {
     else if (!isNaN(i) && !isNaN(r)) { ci=i; cr=r; cv=i*r; cp=(i*i)*r; }
     else if (!isNaN(i) && !isNaN(p)) { ci=i; cp=p; cv=p/i; cr=p/(i*i); }
     else if (!isNaN(r) && !isNaN(p)) { cr=r; cp=p; cv=Math.sqrt(p*r); ci=Math.sqrt(p/r); }
+    
     document.getElementById('voltsInput').value = cv.toFixed(2);
     document.getElementById('ampsInput').value = ci.toFixed(2);
     document.getElementById('ohmsInput').value = cr.toFixed(2);
     document.getElementById('wattsInput').value = cp.toFixed(2);
 });
 
-document.getElementById('loadType').addEventListener('change', (e) => {
-    const type = e.target.value;
-    const labelA = document.getElementById('loadLabelA');
-    const labelB = document.getElementById('loadLabelB');
-    const inputA = document.getElementById('loadA');
-    const inputB = document.getElementById('loadB');
-
-    if (type === 'ea') {
-        labelA.textContent = "Volts (E)";
-        inputA.placeholder = "e.g., 24";
-        labelB.textContent = "Amps (I)";
-        inputB.placeholder = "e.g., 3";
-    } else {
-        labelA.textContent = "Horsepower (HP)";
-        inputA.placeholder = "e.g., 0.2 (for 1/5 HP)";
-        labelB.textContent = "Efficiency (Decimal)";
-        inputB.placeholder = "e.g., 0.75 (for 75%)";
-    }
-    inputA.value = '';
-    inputB.value = '';
-    document.getElementById('loadRes').textContent = '--';
-});
-
 document.getElementById('calcLoadBtn').addEventListener('click', () => {
-    const type = document.getElementById('loadType').value;
-    const v1 = parseFloat(document.getElementById('loadA').value);
-    const v2 = parseFloat(document.getElementById('loadB').value);
-    if(isNaN(v1) || isNaN(v2)) return;
-    let watts = (type === 'ea') ? (v1 * v2) : ((v1 * 746) / v2);
+    const hp = parseFloat(document.getElementById('loadA').value);
+    const eff = parseFloat(document.getElementById('loadB').value);
+    if(isNaN(hp) || isNaN(eff) || eff === 0) return;
+    
+    let watts = (hp * 746) / eff;
     document.getElementById('loadRes').textContent = watts.toFixed(1);
 });
 
@@ -322,4 +269,104 @@ document.getElementById('calcPropBtn').addEventListener('click', () => {
     else if (isNaN(b)) { bInput.value = (a * d) / c; }
     else if (isNaN(c)) { cInput.value = (a * d) / b; }
     else if (isNaN(d)) { dInput.value = (b * c) / a; }
+});
+
+// --- Percentage Calculator Logic ---
+document.getElementById('calcPctBtn').addEventListener('click', () => {
+    const type = document.getElementById('pctType').value;
+    const x = parseFloat(document.getElementById('pctX').value);
+    const y = parseFloat(document.getElementById('pctY').value);
+    const resDisplay = document.getElementById('pctRes');
+    
+    if (isNaN(x) || isNaN(y)) {
+        resDisplay.textContent = "Enter both values";
+        return;
+    }
+    
+    let result = "";
+    if (type === 'pctOf') {
+        result = ((x / 100) * y).toFixed(2);
+    } else if (type === 'isWhatPct') {
+        if (y === 0) result = "Error (Div by 0)";
+        else result = ((x / y) * 100).toFixed(2) + "%";
+    } else if (type === 'pctChange') {
+        if (x === 0) result = "Error (Div by 0)";
+        else {
+            const change = ((y - x) / Math.abs(x)) * 100;
+            const sign = change > 0 ? "+" : "";
+            result = sign + change.toFixed(2) + "%";
+        }
+    }
+    
+    resDisplay.textContent = result;
+});
+
+// UX Feature: Update placeholders when dropdown changes
+document.getElementById('pctType').addEventListener('change', (e) => {
+    const type = e.target.value;
+    const inputX = document.getElementById('pctX');
+    const inputY = document.getElementById('pctY');
+    
+    if (type === 'pctOf') {
+        inputX.placeholder = "e.g., 15 (%)";
+        inputY.placeholder = "e.g., 200";
+    } else if (type === 'isWhatPct') {
+        inputX.placeholder = "e.g., 30";
+        inputY.placeholder = "e.g., 150";
+    } else if (type === 'pctChange') {
+        inputX.placeholder = "Old Value";
+        inputY.placeholder = "New Value";
+    }
+    
+    inputX.value = '';
+    inputY.value = '';
+    document.getElementById('pctRes').textContent = '--';
+});
+
+// --- 6. REFERENCE LIBRARY LOGIC ---
+const refSearch = document.getElementById('refSearch');
+const refItems = document.querySelectorAll('.ref-item');
+const refTabBtns = document.querySelectorAll('.ref-tab-btn');
+
+// Live Search Filtering
+refSearch.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+
+    // Reset tabs to "All" when actively searching to prevent hidden matches
+    if(term.length > 0) {
+        refTabBtns.forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.ref-tab-btn[data-filter="all"]').classList.add('active');
+    }
+
+    refItems.forEach(item => {
+        // Search through all text inside the block (formulas, table rows, headers)
+        const text = item.innerText.toLowerCase();
+        if (text.includes(term)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+});
+
+// Category Tab Filtering
+refTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Clear the search bar when a category is clicked
+        refSearch.value = '';
+
+        // Update active tab styling
+        refTabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.getAttribute('data-filter');
+
+        refItems.forEach(item => {
+            if (filter === 'all' || item.getAttribute('data-category') === filter) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
 });

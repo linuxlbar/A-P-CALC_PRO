@@ -20,6 +20,7 @@
       <button class="tab-btn" data-target="module-metal">Metal</button>
       <button class="tab-btn" data-target="module-elec">Electricity</button>
       <button class="tab-btn" data-target="module-math">Math</button>
+      <button class="tab-btn" data-target="module-ref">Tables & Formulas</button>
     </nav>
   </header>
 
@@ -156,21 +157,15 @@
       </div>
 
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
-        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Load Comparison Tool</h3>
-        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Convert multi-part problems into direct Watts.</p>
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Motor Efficiency Tool</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Calculate required Watts based on HP and efficiency.</p>
         <div class="input-group">
-            <select id="loadType" style="padding: 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); width: 100%;">
-                <option value="ea">Volts & Amps (P = E × I)</option>
-                <option value="eff">Motor Efficiency (HP & Eff)</option>
-            </select>
+            <label>Horsepower (HP)</label>
+            <input type="number" id="loadA" placeholder="e.g., 0.2 (for 1/5 HP)">
         </div>
         <div class="input-group">
-            <label id="loadLabelA">Volts (E)</label>
-            <input type="number" id="loadA" placeholder="e.g., 24">
-        </div>
-        <div class="input-group">
-            <label id="loadLabelB">Amps (I)</label>
-            <input type="number" id="loadB" placeholder="e.g., 3">
+            <label>Efficiency (Decimal)</label>
+            <input type="number" id="loadB" placeholder="e.g., 0.75 (for 75%)">
         </div>
         <button id="calcLoadBtn" class="action-btn">Calculate Watts</button>
         <div class="result-display" style="margin-top: 10px;"><strong>Result: </strong><span id="loadRes">--</span> W</div>
@@ -196,6 +191,31 @@
         <div class="result-display" style="margin-top: 10px;"><strong>Converted: </strong><span id="fracRes">--</span></div>
       </div>
 
+      <div style="padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Percentage Calculator</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Quickly solve common percentage problems.</p>
+        
+        <div class="input-group">
+            <select id="pctType">
+                <option value="pctOf">What is [ X ] % of [ Y ]?</option>
+                <option value="isWhatPct">[ X ] is what % of [ Y ]?</option>
+                <option value="pctChange">% Change from [ X ] to [ Y ]</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <input type="number" id="pctX" placeholder="e.g., 15 (%)">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <input type="number" id="pctY" placeholder="e.g., 200">
+          </div>
+        </div>
+        
+        <button id="calcPctBtn" class="action-btn" style="margin-top: 1rem;">Calculate Percentage</button>
+        <div class="result-display" style="margin-top: 10px;"><strong>Result: </strong><span id="pctRes">--</span></div>
+      </div>
+
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Proportions & Ratios</h3>
         <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Fill in 3 boxes to solve for the empty one (A/B = C/D)</p>
@@ -216,10 +236,203 @@
       </div>
     </section>
 
+   <section class="calc-card" id="module-ref" style="display: none;">
+      <h2>Charts & Formulas</h2>
+      
+      <div class="input-group" style="margin-bottom: 1rem;">
+        <input type="text" id="refSearch" placeholder="Search formulas, charts, keywords..." style="padding-left: 2.5rem; background: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 fill=%22%236b7280%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z%22/%3E%3C/svg%3E') no-repeat 12px center; background-size: 16px;">
+      </div>
+
+      <div class="sub-tabs">
+        <button class="sub-tab-btn active ref-tab-btn" data-filter="all">All</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="wb">W&B</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="metal">Metal</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="elec">Electricity</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="math">Math</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="hardware">Hardware</button>
+      </div>
+
+      <div id="ref-content-container">
+        
+        <div class="ref-item" data-category="wb" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Weight & Balance</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Single Item (WAM Formula):</p>
+          <code class="formula-block">Moment = Weight × Arm<br>Weight = Moment ÷ Arm<br>Arm = Moment ÷ Weight</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Aircraft Total CG:</p>
+          <code class="formula-block">Total CG = Sum of Moments ÷ Sum of Weights</code>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Ballast Shift Weight:</p>
+          <code class="formula-block">Ballast = (Aircraft Wt × (Target CG - Current CG)) ÷ (Ballast Arm - Target CG)</code>
+
+          <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Equipment Change (Alteration)</h4>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Step 1: Find New Weight</p>
+          <code class="formula-block">New Wt = Old Wt - Removed Wt + Installed Wt</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Step 2: Find New Moment</p>
+          <code class="formula-block">New Moment = Old Moment - Removed Moment + Installed Moment</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Step 3: Calculate New CG</p>
+          <code class="formula-block" style="margin-bottom: 5px;">New CG = New Moment ÷ New Wt</code>
+        </div>
+
+        <div class="ref-item" data-category="metal" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Sheet Metal</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Rivet Diameter:</p>
+          <code class="formula-block">Diameter = 3 × Thickest Sheet Layer</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Rivet Length:</p>
+          <code class="formula-block">Length = Total Thickness + (1.5 × Rivet Diameter)</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Edge Distance (ED):</p>
+          <code class="formula-block">Universal (2D) = 2 × Rivet Diameter<br>Flush (2.5D) = 2.5 × Rivet Diameter</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Rivet Pitch (Spacing):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">Pitch = (Length - (2 × ED)) ÷ (Rivet Count - 1)</code>
+
+          
+          <img src="ac-drill-chart.png" alt="AC 43.13-1B Drill Size Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
+          
+        </div>
+
+        <div class="ref-item" data-category="elec" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Electrical</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Ohm's & Watt's Law Wheel:</p>
+          <code class="formula-block">
+            <strong>Volts (E):</strong> I × R | P ÷ I | √(P × R)<br>
+            <strong>Amps (I):</strong> E ÷ R | P ÷ E | √(P ÷ R)<br>
+            <strong>Ohms (R):</strong> E ÷ I | E² ÷ P | P ÷ I²<br>
+            <strong>Watts (P):</strong> E × I | I² × R | E² ÷ R
+          </code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Motor Efficiency (Watts):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">Watts = (Horsepower × 746) ÷ Efficiency Decimal</code>
+          
+          <img src="ac-wire-chart.png" alt="AC 43.13-1B Table 11-9 Wire Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
+          
+        </div>
+
+        <div class="ref-item" data-category="math" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">General Math</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Proportions (Cross-Multiplication):</p>
+          <code class="formula-block">If A ÷ B = C ÷ D:<br>A = (B × C) ÷ D<br>B = (A × D) ÷ C</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Percentages:</p>
+          <code class="formula-block" style="margin-bottom: 5px;">
+            <strong>% of:</strong> (X ÷ 100) × Y<br>
+            <strong>is what %:</strong> (X ÷ Y) × 100<br>
+            <strong>% change:</strong> ((New - Old) ÷ Old) × 100
+          </code>
+        </div>
+
+        <div class="ref-item" data-category="hardware" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem; display: none;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Aircraft Hardware (AC 43.13-1B)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Chapter 7, Section 11 Tables</p>
+
+          <img src="table1.png" alt="AC 43.13 Table 7-1" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+          
+          <img src="table2.png" alt="AC 43.13 Table 7-2" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+               
+          <img src="table3.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">        
+          
+          <img src="table4.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+          
+          <img src="table5.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table7.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table8.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table9.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table10.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table11.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table12.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table13.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table14.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table15.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table16.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table17.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table18.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table19.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table20.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table21.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table22.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table23.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table24.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table25.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table26.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="table27.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+
+
+
+
+
+        </div>
+
+      </div>
+
+        <div class="ref-item" data-category="math" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">General Math</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Proportions (Cross-Multiplication):</p>
+          <code class="formula-block">If A ÷ B = C ÷ D:<br>A = (B × C) ÷ D<br>B = (A × D) ÷ C</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Percentages:</p>
+          <code class="formula-block" style="margin-bottom: 5px;">
+            <strong>% of:</strong> (X ÷ 100) × Y<br>
+            <strong>is what %:</strong> (X ÷ Y) × 100<br>
+            <strong>% change:</strong> ((New - Old) ÷ Old) × 100
+          </code>
+        </div>
+
+      </div>
+
+        <div class="ref-item" data-category="math" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">General Math</h3>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Proportions (Cross-Multiplication):</p>
+          <code class="formula-block">If A ÷ B = C ÷ D:<br>A = (B × C) ÷ D<br>B = (A × D) ÷ C</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Percentages:</p>
+          <code class="formula-block" style="margin-bottom: 5px;">
+            <strong>% of:</strong> (X ÷ 100) × Y<br>
+            <strong>is what %:</strong> (X ÷ Y) × 100<br>
+            <strong>% change:</strong> ((New - Old) ÷ Old) × 100
+          </code>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <footer>
-    <p>Guided AI Development By: Logan Barker</p>
+    <p>Developed By: Logan Barker</p>
   </footer>
 
   <script src="app.js"></script>
