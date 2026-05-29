@@ -350,3 +350,9 @@ footer {
   user-select: none;
   -webkit-user-select: none; 
 }
+
+/* --- Sketchpad Canvas --- */
+#drawingCanvas {
+  touch-action: none; 
+  cursor: crosshair;
+}

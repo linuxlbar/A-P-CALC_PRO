@@ -811,3 +811,71 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// --- SKETCHPAD MODULE LOGIC ---
+const canvas = document.getElementById('drawingCanvas');
+const ctx = canvas.getContext('2d');
+const clearBtn = document.getElementById('clearCanvasBtn');
+
+let isDrawing = false;
+
+// Setup canvas drawing styles
+ctx.strokeStyle = '#003366'; // Aviation Navy ink
+ctx.lineWidth = 3;
+ctx.lineCap = 'round';
+
+// Get exact mouse/touch coordinates relative to the canvas
+function getCoordinates(event) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    
+    // Scale coordinates based on actual rendered size vs logical size
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+// Start drawing
+function startPosition(e) {
+    e.preventDefault(); // Stop scrolling
+    isDrawing = true;
+    const pos = getCoordinates(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+}
+
+// Stop drawing
+function endPosition() {
+    isDrawing = false;
+    ctx.beginPath(); // Reset path so next line doesn't connect
+}
+
+// Draw line
+function draw(e) {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const pos = getCoordinates(e);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+}
+
+// Mouse Events (PC)
+canvas.addEventListener('mousedown', startPosition);
+canvas.addEventListener('mouseup', endPosition);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseleave', endPosition);
+
+// Touch Events (Mobile)
+canvas.addEventListener('touchstart', startPosition, { passive: false });
+canvas.addEventListener('touchend', endPosition);
+canvas.addEventListener('touchmove', draw, { passive: false });
+
+// Clear Canvas
+clearBtn.addEventListener('click', () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
