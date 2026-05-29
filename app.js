@@ -371,27 +371,38 @@ refTabBtns.forEach(btn => {
     });
 });
 
-// --- 7. IMAGE LIGHTBOX LOGIC ---
+// --- 7. IMAGE LIGHTBOX LOGIC (BULLETPROOF VERSION) ---
+
+// 1. Auto-inject the modal HTML directly from JavaScript so it's guaranteed to exist
+if (!document.getElementById('imgModal')) {
+    const modalHtml = `
+        <div id="imgModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.95); backdrop-filter: blur(5px); overflow: auto; overscroll-behavior: contain;">
+            <span id="closeModalBtn" style="position: fixed; top: 15px; right: 25px; color: #ffffff; font-size: 45px; font-weight: bold; cursor: pointer; z-index: 10000; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">&times;</span>
+            <div id="modalContainer" style="width: 100%; min-height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                <img id="modalImg" style="margin: auto; display: block; max-width: 100%; max-height: 90vh; object-fit: contain; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
 const imgModal = document.getElementById('imgModal');
 const modalImg = document.getElementById('modalImg');
-const closeModal = document.querySelector('.close-modal');
 
-// Attach click event to all images in the reference section
-document.querySelectorAll('.ref-item img').forEach(img => {
-    img.addEventListener('click', function() {
+// 2. Use "Event Delegation" to catch taps anywhere on the screen
+document.body.addEventListener('click', function(e) {
+    
+    // A. Did they tap an image inside the reference module?
+    if (e.target.tagName === 'IMG' && e.target.closest('#module-ref')) {
         imgModal.style.display = 'block';
-        modalImg.src = this.src;
-    });
-});
-
-// Close when clicking the 'X'
-closeModal.addEventListener('click', () => {
-    imgModal.style.display = 'none';
-});
-
-// Close when tapping the dark background
-imgModal.addEventListener('click', (e) => {
-    if (e.target === imgModal || e.target.classList.contains('modal-content-container')) {
+        modalImg.src = e.target.src;
+        document.body.style.overflow = 'hidden'; // Stop background from scrolling
+    }
+    
+    // B. Did they tap the dark background, the container, or the 'X' button?
+    if (e.target === imgModal || e.target.id === 'modalContainer' || e.target.id === 'closeModalBtn') {
         imgModal.style.display = 'none';
+        modalImg.src = '';
+        document.body.style.overflow = ''; // Restore background scrolling
     }
 });
