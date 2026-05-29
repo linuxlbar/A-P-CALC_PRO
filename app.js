@@ -812,99 +812,241 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// --- SKETCHPAD MODULE LOGIC ---
+// =========================================================================
+// SKETCHPAD 2.0: OBJECT-ORIENTED ENGINE
+// =========================================================================
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
 const clearBtn = document.getElementById('clearCanvasBtn');
 
+let currentTool = 'freehand';
+let currentColor = '#003366';
+let currentWidth = 3;
+
+// The Vault: Stores the mathematical data of everything drawn
+let elements = [];
 let isDrawing = false;
+let isDragging = false;
+let selectedElement = null;
+let startX, startY;
 
-// Setup canvas drawing styles
-ctx.strokeStyle = '#003366'; // Aviation Navy ink
-ctx.lineWidth = 3;
-ctx.lineCap = 'round';
+// --- UI EVENT LISTENERS ---
+const toolBtns = document.querySelectorAll('.tool-btn');
+toolBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        toolBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.getAttribute('data-tool');
+        selectedElement = null; // Drop anything currently being held
+        redraw();
+    });
+});
 
-// Get exact mouse/touch coordinates relative to the canvas
+const colorBtns = document.querySelectorAll('.color-btn');
+colorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        colorBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentColor = btn.getAttribute('data-color');
+        currentWidth = btn.classList.contains('eraser-btn') ? 15 : 3;
+        
+        // Bonus Feature: Change color of an already placed shape
+        if (selectedElement && currentTool === 'move') {
+            selectedElement.color = currentColor;
+            if (btn.classList.contains('eraser-btn')) selectedElement.width = 15;
+            redraw();
+        }
+    });
+});
+
+// --- CORE ENGINE LOGIC ---
 function getCoordinates(event) {
     const rect = canvas.getBoundingClientRect();
     const clientX = event.touches ? event.touches[0].clientX : event.clientX;
     const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-    
-    // Scale coordinates based on actual rendered size vs logical size
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-
-    return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-    };
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
-// Start drawing
-function startPosition(e) {
-    e.preventDefault(); // Stop scrolling
-    isDrawing = true;
-    const pos = getCoordinates(e);
+// Rebuilds the path in memory so the canvas can draw it or hit-test it
+function traceElement(el) {
     ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
+    if (el.type === 'freehand' || el.type === 'eraser') {
+        if (el.points.length === 0) return;
+        ctx.moveTo(el.points[0].x, el.points[0].y);
+        for(let i=1; i<el.points.length; i++) ctx.lineTo(el.points[i].x, el.points[i].y);
+    } else if (el.type === 'line') {
+        ctx.moveTo(el.x1, el.y1); ctx.lineTo(el.x2, el.y2);
+    } else if (el.type === 'square') {
+        ctx.rect(el.x, el.y, el.w, el.h);
+    } else if (el.type === 'circle') {
+        ctx.arc(el.x, el.y, el.r, 0, Math.PI*2);
+    }
 }
 
-// Stop drawing
-function endPosition() {
-    isDrawing = false;
-    ctx.beginPath(); // Reset path so next line doesn't connect
+// Wipes the screen and repaints the entire vault
+function redraw() {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    elements.forEach(el => {
+        ctx.strokeStyle = el.color;
+        ctx.lineWidth = el.width;
+        ctx.lineCap = 'round';
+        
+        traceElement(el);
+        ctx.stroke();
+        
+        // Draw a highlight ring if the object is selected
+        if (el === selectedElement) {
+            ctx.save();
+            ctx.strokeStyle = '#0ea5e9';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            ctx.stroke(); 
+            ctx.restore();
+        }
+    });
 }
 
-// Draw line
-function draw(e) {
-    if (!isDrawing) return;
+// Scans the vault backwards (top layer first) to find what was clicked
+function getElementAtPosition(x, y) {
+    for (let i = elements.length - 1; i >= 0; i--) {
+        let el = elements[i];
+        traceElement(el); 
+        
+        // 1. Invisible padded hitbox: pretend the line is 20px thick for clicking
+        ctx.lineWidth = Math.max(el.width, 20); 
+        
+        // 2. Did they click on or near the line?
+        if (ctx.isPointInStroke(x, y)) return el;
+        
+        // 3. Did they click INSIDE a closed shape? (Square/Circle)
+        if ((el.type === 'square' || el.type === 'circle') && ctx.isPointInPath(x, y)) {
+            return el;
+        }
+    }
+    return null;
+}
+
+// --- INTERACTION LOGIC ---
+function startPosition(e) {
     e.preventDefault();
     const pos = getCoordinates(e);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
+    startX = pos.x;
+    startY = pos.y;
+
+    if (currentTool === 'move') {
+        selectedElement = getElementAtPosition(pos.x, pos.y);
+        if (selectedElement) isDragging = true;
+        redraw();
+        return;
+    }
+
+    isDrawing = true;
+    selectedElement = null;
+
+    if (currentTool === 'freehand' || currentTool === 'eraser') {
+        elements.push({ type: currentTool, color: currentColor, width: currentWidth, points: [{x: pos.x, y: pos.y}] });
+    } else {
+        elements.push({ type: currentTool, color: currentColor, width: currentWidth, x: startX, y: startY, x1: startX, y1: startY, x2: startX, y2: startY, w: 0, h: 0, r: 0 });
+    }
 }
 
-// Mouse Events (PC)
+function draw(e) {
+    e.preventDefault();
+    const pos = getCoordinates(e);
+
+    // If grabbing something, shift all its coordinates
+    if (isDragging && selectedElement) {
+        const dx = pos.x - startX;
+        const dy = pos.y - startY;
+        
+        if (selectedElement.type === 'freehand' || selectedElement.type === 'eraser') {
+            selectedElement.points.forEach(p => { p.x += dx; p.y += dy; });
+        } else if (selectedElement.type === 'line') {
+            selectedElement.x1 += dx; selectedElement.y1 += dy;
+            selectedElement.x2 += dx; selectedElement.y2 += dy;
+        } else {
+            selectedElement.x += dx; selectedElement.y += dy;
+        }
+        
+        startX = pos.x;
+        startY = pos.y;
+        redraw();
+        return;
+    }
+
+    if (!isDrawing) return;
+
+    // Live update the coordinates of the shape currently being drawn
+    const currentShape = elements[elements.length - 1];
+
+    if (currentTool === 'freehand' || currentTool === 'eraser') {
+        currentShape.points.push({x: pos.x, y: pos.y});
+    } else if (currentTool === 'line') {
+        currentShape.x2 = pos.x; currentShape.y2 = pos.y;
+    } else if (currentTool === 'square') {
+        currentShape.w = pos.x - startX; currentShape.h = pos.y - startY;
+    } else if (currentTool === 'circle') {
+        currentShape.r = Math.sqrt(Math.pow((pos.x - startX), 2) + Math.pow((pos.y - startY), 2));
+    }
+    redraw();
+}
+
+function endPosition() {
+    isDrawing = false;
+    isDragging = false;
+    
+    // Deletes accidental empty clicks so they don't clutter the vault
+    if (elements.length > 0) {
+        const last = elements[elements.length - 1];
+        if ((last.type === 'freehand' || last.type === 'eraser') && last.points.length < 2) elements.pop();
+        else if (last.type === 'square' && last.w === 0) elements.pop();
+        else if (last.type === 'circle' && last.r === 0) elements.pop();
+        else if (last.type === 'line' && last.x1 === last.x2 && last.y1 === last.y2) elements.pop();
+    }
+    redraw();
+}
+
+// Mouse & Touch Hooks
 canvas.addEventListener('mousedown', startPosition);
 canvas.addEventListener('mouseup', endPosition);
 canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('mouseleave', endPosition);
-
-// Touch Events (Mobile)
 canvas.addEventListener('touchstart', startPosition, { passive: false });
 canvas.addEventListener('touchend', endPosition);
 canvas.addEventListener('touchmove', draw, { passive: false });
 
-// --- Initial Canvas Setup ---
-// Pour white paint onto the canvas so it isn't transparent
-ctx.fillStyle = '#ffffff';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-// Clear Canvas (Updated)
 clearBtn.addEventListener('click', () => {
-    // Instead of making it transparent again, refill it with solid white
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    elements = [];
+    selectedElement = null;
+    redraw();
 });
-// Color Selection Logic
-const colorBtns = document.querySelectorAll('.color-btn');
 
-colorBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        // 1. Remove the 'active' highlight from all buttons
-        colorBtns.forEach(b => b.classList.remove('active'));
-        
-        // 2. Add the 'active' highlight to the clicked button
-        btn.classList.add('active');
-        
-        // 3. Change the actual ink color
-        ctx.strokeStyle = btn.getAttribute('data-color');
-        
-        // 4. Make the eraser thicker so it's easier to use
-        if (btn.classList.contains('eraser-btn')) {
-            ctx.lineWidth = 15;
-        } else {
-            ctx.lineWidth = 3;
+// --- UNDO LOGIC ---
+const undoBtn = document.getElementById('undoBtn');
+
+function undoLastAction() {
+    if (elements.length > 0) {
+        elements.pop(); // Deletes the most recent shape from the Vault
+        selectedElement = null; // Drops the item if you were currently holding it
+        redraw(); // Repaints the screen without that item
+    }
+}
+
+undoBtn.addEventListener('click', undoLastAction);
+
+// Pro-Tip: Keyboard Shortcut (Ctrl + Z)
+document.addEventListener('keydown', (e) => {
+    // Only trigger if the sketchpad is actually visible
+    if (document.getElementById('module-sketch').style.display !== 'none') {
+        if (e.ctrlKey && e.key === 'z') {
+            undoLastAction();
         }
-    });
+    }
 });
+
+// Boot up the engine
+redraw();
