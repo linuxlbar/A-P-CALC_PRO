@@ -370,3 +370,28 @@ refTabBtns.forEach(btn => {
         });
     });
 });
+
+// --- 7. IMAGE LIGHTBOX LOGIC ---
+const imgModal = document.getElementById('imgModal');
+const modalImg = document.getElementById('modalImg');
+const closeModal = document.querySelector('.close-modal');
+
+// Attach click event to all images in the reference section
+document.querySelectorAll('.ref-item img').forEach(img => {
+    img.addEventListener('click', function() {
+        imgModal.style.display = 'block';
+        modalImg.src = this.src;
+    });
+});
+
+// Close when clicking the 'X'
+closeModal.addEventListener('click', () => {
+    imgModal.style.display = 'none';
+});
+
+// Close when tapping the dark background
+imgModal.addEventListener('click', (e) => {
+    if (e.target === imgModal || e.target.classList.contains('modal-content-container')) {
+        imgModal.style.display = 'none';
+    }
+});
