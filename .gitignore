@@ -1,14 +1,10 @@
 node_modules/
-.DS_Store
-*.log
-
-# Windows image cache
-Thumbs.db
-
-# Security (In case you ever add a database or authentication later)
-.env
-
-# Build folders (For when you use Capacitor to wrap the app for iOS/Android)
+android/
+ios/
 dist/
 build/
+.DS_Store
+Thumbs.db
+*.log
+.env
 .capacitor/

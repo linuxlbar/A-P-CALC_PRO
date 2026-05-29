@@ -1,0 +1,20 @@
+# Node dependencies
+node_modules/
+package-lock.json
+
+# Build directories
+dist/
+build/
+.capacitor/
+
+# Mobile platforms (Crucial to prevent path length errors)
+android/
+ios/
+
+# System files
+.DS_Store
+Thumbs.db
+*.log
+
+# Security
+.env
