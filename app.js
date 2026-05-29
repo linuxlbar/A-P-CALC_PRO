@@ -766,3 +766,48 @@ document.getElementById('calcBmepBtn').addEventListener('click', () => {
     const bmep = (hp * 792000) / (rpm * disp);
     document.getElementById('bmepOut').textContent = bmep.toFixed(1);
 });
+
+// --- 13. LEGAL MODAL LOGIC ---
+document.addEventListener('DOMContentLoaded', () => {
+    const legalModal = document.getElementById('legalModal');
+    const openLegalBtn = document.getElementById('openLegalBtn');
+    const closeLegalBtn = document.getElementById('closeLegalBtn');
+    const agreeBtn = document.getElementById('agreeBtn');
+
+    // 1. Check if the user has ALREADY accepted
+    if (!localStorage.getItem('disclaimerAccepted')) {
+        // If not, force the modal open immediately
+        legalModal.style.display = 'block';
+    }
+
+    // 2. Open via Footer Button
+    if (openLegalBtn) {
+        openLegalBtn.addEventListener('click', () => {
+            if (legalModal) legalModal.style.display = 'block';
+        });
+    }
+
+    // 3. Close Button logic
+    // We keep the "X" button for footer access, but only "Agree" sets the flag
+    if (closeLegalBtn) {
+        closeLegalBtn.addEventListener('click', () => {
+            if (legalModal) legalModal.style.display = 'none';
+        });
+    }
+
+    // 4. AGREE Button logic (The "Gatekeeper")
+    if (agreeBtn) {
+        agreeBtn.addEventListener('click', () => {
+            // Set the flag so this logic doesn't trigger on next load
+            localStorage.setItem('disclaimerAccepted', 'true');
+            if (legalModal) legalModal.style.display = 'none';
+        });
+    }
+
+    // 5. Close if they click outside (but don't set the flag)
+    window.addEventListener('click', (event) => {
+        if (event.target === legalModal) {
+            legalModal.style.display = 'none';
+        }
+    });
+});
