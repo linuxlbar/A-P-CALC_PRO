@@ -875,7 +875,36 @@ canvas.addEventListener('touchstart', startPosition, { passive: false });
 canvas.addEventListener('touchend', endPosition);
 canvas.addEventListener('touchmove', draw, { passive: false });
 
-// Clear Canvas
+// --- Initial Canvas Setup ---
+// Pour white paint onto the canvas so it isn't transparent
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Clear Canvas (Updated)
 clearBtn.addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Instead of making it transparent again, refill it with solid white
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+});
+// Color Selection Logic
+const colorBtns = document.querySelectorAll('.color-btn');
+
+colorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // 1. Remove the 'active' highlight from all buttons
+        colorBtns.forEach(b => b.classList.remove('active'));
+        
+        // 2. Add the 'active' highlight to the clicked button
+        btn.classList.add('active');
+        
+        // 3. Change the actual ink color
+        ctx.strokeStyle = btn.getAttribute('data-color');
+        
+        // 4. Make the eraser thicker so it's easier to use
+        if (btn.classList.contains('eraser-btn')) {
+            ctx.lineWidth = 15;
+        } else {
+            ctx.lineWidth = 3;
+        }
+    });
 });

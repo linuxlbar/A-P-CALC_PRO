@@ -356,3 +356,30 @@ footer {
   touch-action: none; 
   cursor: crosshair;
 }
+
+/* --- Sketchpad Color Buttons --- */
+.color-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.color-btn:hover {
+  transform: translateY(-2px);
+}
+
+.color-btn.active {
+  border: 3px solid var(--accent-color);
+  box-shadow: 0 0 0 2px white inset, 0 0 10px rgba(14, 165, 233, 0.6);
+}
+
+.eraser-btn {
+  border-radius: var(--radius-sm);
+  width: auto;
+  padding: 0 12px;
+  border: 1px solid var(--border-color);
+}
