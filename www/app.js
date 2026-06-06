@@ -181,6 +181,44 @@ document.getElementById('calcRivetBtn').addEventListener('click', () => {
     document.getElementById('rivetPitchOut').textContent = pitch.toFixed(3);
 });
 
+// Bend Allowance & Sightline Calculator
+document.getElementById('calcBendBtn').addEventListener('click', () => {
+    const t = parseFloat(document.getElementById('bendT').value);
+    const r = parseFloat(document.getElementById('bendR').value);
+    const angle = parseFloat(document.getElementById('bendAngle').value);
+    const flange = parseFloat(document.getElementById('bendFlange').value);
+
+    // Validate inputs (Flange is optional unless they want Flat/Sightline)
+    if (isNaN(t) || isNaN(r) || isNaN(angle)) {
+        alert("Please enter at least Thickness, Radius, and Angle.");
+        return;
+    }
+
+    // 1. Calculate Bend Allowance (AC 43.13 Empirical Formula)
+    const ba = ((0.01743 * r) + (0.0078 * t)) * angle;
+
+    // 2. Calculate Setback (K-Factor * (R + T))
+    // Convert angle to radians for Math.tan
+    const kFactor = Math.tan((angle / 2) * (Math.PI / 180));
+    const sb = kFactor * (r + t);
+
+    // Output BA and SB
+    document.getElementById('outBA').textContent = ba.toFixed(4) + '"';
+    document.getElementById('outSB').textContent = sb.toFixed(4) + '"';
+
+    // 3. Calculate Flat & Sightline (if Flange length is provided)
+    if (!isNaN(flange)) {
+        const flat = flange - sb;
+        const sightline = flat + r;
+        
+        document.getElementById('outFlat').textContent = flat.toFixed(4) + '"';
+        document.getElementById('outSL').textContent = sightline.toFixed(4) + '"';
+    } else {
+        document.getElementById('outFlat').textContent = "Need Flange";
+        document.getElementById('outSL').textContent = "Need Flange";
+    }
+});
+
 
 // --- 4. ELECTRICAL MODULE ---
 document.getElementById('calcElecBtn').addEventListener('click', () => {
