@@ -148,9 +148,8 @@
         <button id="calcRivetBtn" class="action-btn">Calculate Pitch</button>
         <div class="result-display" style="margin-top: 10px;"><strong>Pitch (Spacing): </strong><span id="rivetPitchOut">--</span> in</div>
       </div>
-    </section>
 
-    <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem; margin-bottom: 2rem;">
         <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Bend Allowance & Sightline</h3>
         <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Uses AC 43.13 empirical formulas.</p>
         
@@ -198,6 +197,9 @@
           </div>
         </div>
       </div>
+    </section>
+
+    
 
     <section class="calc-card" id="module-elec" style="display: none;">
       <h2>Electrical Systems</h2>
@@ -590,10 +592,18 @@
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Rivet Pitch (Spacing):</p>
           <code class="formula-block" style="margin-bottom: 15px;">Pitch = (Length - (2 × ED)) ÷ (Rivet Count - 1)</code>
 
-          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Bend Allowance (BA):</p>
+          <code class="formula-block">BA = ((0.01743 × R) + (0.0078 × T)) × Angle</code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Setback (SB) & Sightline:</p>
+          <code class="formula-block" style="margin-bottom: 15px;">SB = K-Factor × (Radius + Thickness)<br>Sightline = Flat Dimension + Radius</code>
+
           <img src="ac-drill-chart.png" alt="AC 43.13-1B Drill Size Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
           
           <img src="rivet-chart.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
+          <img src="kfactor.png" alt="AC 43.13 Table 7-3" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block;">
+
 
         </div>
 
