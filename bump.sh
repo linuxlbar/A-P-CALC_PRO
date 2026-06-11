@@ -6,5 +6,5 @@ VERSION=$(node -p "require('./package.json').version")
 sed -i "s/Version [0-9.]*/Version $VERSION/" www/index.html
 
 # 3. Add the updated files to git
-git add index.html package.json
+git add www/index.html package.json
 echo "Version bumped to $VERSION and files staged."
