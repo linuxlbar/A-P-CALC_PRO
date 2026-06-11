@@ -249,6 +249,7 @@ document.querySelectorAll('.calc-card').forEach(card => {
 
     // 3. Program the wipe logic
     resetBtn.addEventListener('click', () => {
+        triggerHaptic('medium');
         // Clear all input boxes within this specific card
         card.querySelectorAll('input').forEach(input => {
             input.value = '';
@@ -275,6 +276,7 @@ document.querySelectorAll('.calc-card').forEach(card => {
 // --- 1.7 SMART LOCAL CLEAR BUTTONS ---
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('local-clear-btn')) {
+        triggerHaptic('medium');
         const toolBlock = e.target.parentElement;
         
         // 1. Clear all inputs inside this specific tool only
