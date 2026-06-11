@@ -716,3 +716,17 @@ body.glove-mode .calc-btn {
 [data-theme="dark"] .alt-header-box h4 {
   color: #f3f4f6; /* White text for better contrast */
 }
+
+/* --- Eraser Button Styles --- */
+.eraser-btn {
+  background-color: white;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-weight: bold;
+}
+
+[data-theme="dark"] .eraser-btn {
+  background-color: #4b5563; /* Darker grey for dark mode */
+  color: #f3f4f6;           /* Light text */
+  border: 1px solid #6b7280;
+}
