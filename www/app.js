@@ -17,6 +17,68 @@ tabButtons.forEach(button => {
   });
 });
 
+// =========================================================================
+// 1.1 TACTILE ENGINE (HAPTICS)
+// =========================================================================
+function triggerHaptic(style = 'light') {
+    // Failsafe: Silently aborts if running on a PC that doesn't have a vibration motor
+    if (!navigator.vibrate) return;
+
+    if (style === 'light') {
+        navigator.vibrate(10); // A sharp, quick 'tick' for tabs and numbers
+    } else if (style === 'medium') {
+        navigator.vibrate(25); // A heavier 'thud' for calculation buttons
+    } else if (style === 'success') {
+        navigator.vibrate([15, 50, 20]); // A double-tap 'buzz' for copying/pasting
+    }
+}
+
+// Global click listener to automatically trigger the physical haptics
+document.addEventListener('click', (e) => {
+    // 1. Light Tick: Navigation tabs and standard calculator number pad
+    if (e.target.closest('.tab-btn') || e.target.closest('.sub-tab-btn') || e.target.closest('.calc-btn')) {
+        triggerHaptic('light');
+    } 
+    // 2. Medium Thud: Primary action buttons (Calculate, Clear, Convert)
+    else if (e.target.closest('.action-btn') && !e.target.closest('.calc-btn')) {
+        triggerHaptic('medium');
+    }
+});
+
+
+// =========================================================================
+// 1.2 SMART KEYBOARD FLOW
+// =========================================================================
+document.addEventListener('keydown', (e) => {
+    // Listen for the "Enter", "Next", or "Return" key on mobile keyboards
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+        e.preventDefault(); 
+
+        const activeModule = e.target.closest('.calc-card');
+        if (!activeModule) return;
+
+        // Map out every visible input box inside the current tool
+        const inputs = Array.from(activeModule.querySelectorAll('input:not([type="hidden"])'))
+            .filter(input => input.offsetParent !== null); // Ensures we don't jump to hidden tabs
+        
+        const currentIndex = inputs.indexOf(e.target);
+        
+        // If there is another box below this one, jump the cursor to it instantly
+        if (currentIndex > -1 && currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
+        } else {
+            // If this is the final box, drop the keyboard and hit the 'Calculate' button automatically
+            e.target.blur(); 
+            const calcBtn = activeModule.querySelector('.action-btn:not(.local-clear-btn):not(.calc-btn)');
+            if (calcBtn) {
+                calcBtn.classList.add('active'); // Visual click effect
+                setTimeout(() => calcBtn.classList.remove('active'), 150);
+                calcBtn.click();
+            }
+        }
+    }
+});
+
 // --- 1.5 THEME TOGGLE (DARK MODE) ---
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const currentTheme = localStorage.getItem('theme') || 'light';
@@ -45,7 +107,131 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-// --- 1.6 UNIVERSAL MODULE RESET ---
+// =========================================================================
+// 1.6 QUALITY OF LIFE TOOLS (Wake Lock, Glove Mode, Drawer)
+// =========================================================================
+
+// --- Wake Lock (Always Awake) ---
+let wakeLock = null;
+const wakeToggleBtn = document.getElementById('wakeToggleBtn');
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeToggleBtn.style.color = '#fbbf24'; // Illuminates yellow
+        wakeToggleBtn.style.textShadow = '0 0 10px rgba(251, 191, 36, 0.5)';
+        triggerHaptic('light');
+    } catch (err) { console.log('Wake Lock denied by OS.'); }
+}
+
+wakeToggleBtn.addEventListener('click', () => {
+    if (wakeLock !== null) {
+        wakeLock.release().then(() => {
+            wakeLock = null;
+            wakeToggleBtn.style.color = 'rgba(255,255,255,0.5)';
+            wakeToggleBtn.style.textShadow = 'none';
+            triggerHaptic('light');
+        });
+    } else {
+        requestWakeLock();
+    }
+});
+
+// Auto-reacquire lock if you minimize the app and open it back up
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        wakeLock = await navigator.wakeLock.request('screen');
+    }
+});
+
+// --- Glove Mode Expansion ---
+const gloveToggleBtn = document.getElementById('gloveToggleBtn');
+const isGloveMode = localStorage.getItem('gloveMode') === 'true';
+
+if (isGloveMode) {
+    document.body.classList.add('glove-mode');
+    gloveToggleBtn.style.filter = 'none';
+    gloveToggleBtn.style.opacity = '1';
+}
+
+gloveToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('glove-mode');
+    triggerHaptic('medium');
+    
+    if (document.body.classList.contains('glove-mode')) {
+        localStorage.setItem('gloveMode', 'true');
+        gloveToggleBtn.style.filter = 'none';
+        gloveToggleBtn.style.opacity = '1';
+    } else {
+        localStorage.setItem('gloveMode', 'false');
+        gloveToggleBtn.style.filter = 'grayscale(100%)';
+        gloveToggleBtn.style.opacity = '0.6';
+    }
+});
+
+// --- Global Quick-Converter Drawer ---
+const quickDrawer = document.getElementById('quickDrawer');
+const drawerTab = document.getElementById('drawerTab');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const resetDrawerBtn = document.getElementById('resetDrawerBtn');
+
+function toggleDrawer() {
+    quickDrawer.classList.toggle('open');
+    drawerOverlay.classList.toggle('visible');
+    triggerHaptic('light');
+}
+
+drawerTab.addEventListener('click', toggleDrawer);
+drawerOverlay.addEventListener('click', toggleDrawer);
+
+// Reset Logic
+resetDrawerBtn.addEventListener('click', () => {
+    quickDrawer.querySelectorAll('input').forEach(input => input.value = '');
+    triggerHaptic('medium');
+});
+
+// Helper for Bi-Directional Math
+const syncInputs = (id1, id2, calc1to2, calc2to1) => {
+    const el1 = document.getElementById(id1);
+    const el2 = document.getElementById(id2);
+    el1.addEventListener('input', () => {
+        const val = parseFloat(el1.value);
+        el2.value = isNaN(val) ? '' : calc1to2(val).toFixed(4).replace(/\.?0+$/, '');
+    });
+    el2.addEventListener('input', () => {
+        const val = parseFloat(el2.value);
+        el1.value = isNaN(val) ? '' : calc2to1(val).toFixed(4).replace(/\.?0+$/, '');
+    });
+};
+
+// Torque
+syncInputs('qcInLbs', 'qcFtLbs', (inLbs) => inLbs / 12, (ftLbs) => ftLbs * 12);
+// Temp
+syncInputs('qcCelsius', 'qcFahrenheit', (c) => (c * 9/5) + 32, (f) => (f - 32) * 5/9);
+// Metric / Imperial
+syncInputs('qcMm', 'qcInches', (mm) => mm / 25.4, (inches) => inches * 25.4);
+
+// Spacing (Fraction ↔ Decimal)
+const qcFrac = document.getElementById('qcFrac');
+const qcDec = document.getElementById('qcDec');
+
+qcFrac.addEventListener('input', () => {
+    const val = qcFrac.value;
+    if (val.includes('/')) {
+        const [n, d] = val.split('/').map(Number);
+        if (d && d !== 0) qcDec.value = (n / d).toFixed(4).replace(/\.?0+$/, '');
+    }
+});
+qcDec.addEventListener('input', () => {
+    const val = parseFloat(qcDec.value);
+    if (!isNaN(val)) {
+        // Simple decimal to fraction approximation
+        const den = 16; // Using 16ths as standard rivet spacing
+        const num = Math.round(val * den);
+        qcFrac.value = `${num}/${den}`;
+    }
+});
+// --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
     // Skip the Reference Library - nothing to clear there
     if (card.id === 'module-ref') return;
@@ -426,6 +612,7 @@ function renderCalcHistory() {
             localStorage.setItem('smartClipboard', smartClipboard);
 
             // C. Tactile UI Feedback
+            triggerHaptic('success');
             const originalText = e.target.textContent;
             e.target.textContent = 'Copied ✓';
             e.target.style.backgroundColor = 'var(--success-text)';
@@ -1600,6 +1787,7 @@ pasteBadge.addEventListener('pointerdown', (e) => {
         activeInput.dispatchEvent(new Event('input', { bubbles: true })); 
         
         // Tactile Success Feedback
+        triggerHaptic('success');
         pasteBadge.textContent = '✓ Pasted';
         pasteBadge.style.backgroundColor = 'var(--success-text)';
         activeInput.style.borderColor = 'var(--success-text)';

@@ -12,12 +12,17 @@
 <body>
 
   <header>
-    <div style="position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; padding: 0 10px;">
+   <div style="position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding: 0 10px;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <img src="icon-192.png" alt="App Icon" style="width: 36px; height: 36px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
         <h1 style="margin-bottom: 0;">A&P Calculator</h1>
       </div>
-      <button id="themeToggleBtn" style="position: absolute; right: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: white; transition: transform 0.2s ease;">🌙</button>
+      
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <button id="wakeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.2s ease;" title="Keep Screen Awake">💡</button>
+        <button id="gloveToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; filter: grayscale(100%); opacity: 0.6; transition: all 0.2s ease;" title="Glove Mode">🧤</button>
+        <button id="themeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Dark Mode">🌙</button>
+      </div>
     </div>
     <nav class="tabs" style="overflow-x: auto; white-space: nowrap; display: flex; gap: 5px; padding-bottom: 5px;">
       <button class="tab-btn active" data-target="module-wb">Weight & Balance</button>
@@ -836,6 +841,80 @@
     <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; letter-spacing: 0.5px;">Version 1.1.0</p>
     <button id="openLegalBtn" style="background: none; border: none; color: var(--accent-color); text-decoration: underline; cursor: pointer; font-size: 0.8rem; margin-top: 10px;">Legal & Disclaimer</button>
   </footer>
+
+<div id="drawerOverlay" class="drawer-overlay"></div>
+  <div id="quickDrawer" class="quick-drawer">
+    <div id="drawerTab" class="drawer-tab">
+      <span style="transform: rotate(-90deg); white-space: nowrap; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">TOOLS</span>
+    </div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+      <h3 style="color: var(--primary-color); margin: 0; font-size: 1.2rem;">Quick Tools</h3>
+      <button id="resetDrawerBtn" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Reset All</button>
+    </div>
+    
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label>Torque (in-lb ↔ ft-lb)</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="number" inputmode="decimal" id="qcInLbs" placeholder="in-lb">
+        <input type="number" inputmode="decimal" id="qcFtLbs" placeholder="ft-lb">
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label>Temp (°C ↔ °F)</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="number" inputmode="decimal" id="qcCelsius" placeholder="°C">
+        <input type="number" inputmode="decimal" id="qcFahrenheit" placeholder="°F">
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label>Fraction ↔ Decimal</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="qcFrac" placeholder="e.g. 5/16">
+        <input type="number" inputmode="decimal" id="qcDec" placeholder="Dec">
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Metric ↔ Imperial (mm ↔ in)</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="number" inputmode="decimal" id="qcMm" placeholder="mm">
+        <input type="number" inputmode="decimal" id="qcInches" placeholder="in">
+      </div>
+    </div>
+  </div>
+
+    <div class="input-group" style="margin-bottom: 15px;">
+      <label style="font-size: 0.75rem;">Temperature</label>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1; position: relative;">
+          <input type="number" inputmode="decimal" id="qcCelsius" placeholder="Celsius" style="padding-right: 30px;">
+          <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted);">°C</span>
+        </div>
+        <div style="flex: 1; position: relative;">
+          <input type="number" inputmode="decimal" id="qcFahrenheit" placeholder="Fahr..." style="padding-right: 30px;">
+          <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted);">°F</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label style="font-size: 0.75rem;">Length / Spacing</label>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1; position: relative;">
+          <input type="number" inputmode="decimal" id="qcInches" placeholder="Inches" style="padding-right: 30px;">
+          <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted);">in</span>
+        </div>
+        <div style="flex: 1; position: relative;">
+          <input type="number" inputmode="decimal" id="qcMm" placeholder="Milli..." style="padding-right: 35px;">
+          <span style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: var(--text-muted);">mm</span>
+        </div>
+      </div>
+    </div>
+    
+  </div>
 
   <script src="app.js"></script>
   
