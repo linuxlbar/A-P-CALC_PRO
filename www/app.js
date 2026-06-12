@@ -1811,6 +1811,7 @@ let fleetRegistry = {};
 let activeManualIndex = [];
 
 // DOM Elements
+const makeSelect = document.getElementById('aircraftMake');
 const modelSelect = document.getElementById('aircraftModel');
 const snSelect = document.getElementById('aircraftSN');
 const searchInput = document.getElementById('manualSearch');
@@ -1821,41 +1822,68 @@ fetch('fleet_registry.json')
     .then(res => res.json())
     .then(data => {
         fleetRegistry = data;
-        // Populate the first dropdown with aircraft models
-        Object.keys(fleetRegistry).forEach(model => {
+        // Populate the Make dropdown
+        Object.keys(fleetRegistry).forEach(make => {
             const option = document.createElement('option');
-            option.value = model;
-            option.textContent = model;
-            modelSelect.appendChild(option);
+            option.value = make;
+            option.textContent = make;
+            makeSelect.appendChild(option);
         });
     })
     .catch(err => console.error("Fleet Registry failed to load:", err));
 
-// 2. Handle Model Selection (Unlock S/N dropdown)
-modelSelect.addEventListener('change', (e) => {
-    const selectedModel = e.target.value;
+// 2. Handle Make Selection (Unlock Model dropdown)
+makeSelect.addEventListener('change', (e) => {
+    const selectedMake = e.target.value;
     
     // Reset lower fields
-    snSelect.innerHTML = '<option value="">2. Select S/N Range</option>';
+    modelSelect.innerHTML = '<option value="">2. Select Model</option>';
+    snSelect.innerHTML = '<option value="">3. Select S/N Range</option>';
+    modelSelect.disabled = true;
     snSelect.disabled = true;
     searchInput.disabled = true;
     searchInput.value = '';
     resultsDiv.innerHTML = '';
     activeManualIndex = [];
 
-    if (selectedModel && fleetRegistry[selectedModel]) {
-        // Populate S/N ranges for this specific model
-        fleetRegistry[selectedModel].forEach(snObj => {
+    if (selectedMake && fleetRegistry[selectedMake]) {
+        // Populate Model dropdown for this Make
+        Object.keys(fleetRegistry[selectedMake]).forEach(model => {
             const option = document.createElement('option');
-            option.value = snObj.file; // We store the filename in the value
-            option.textContent = snObj.range;
-            snSelect.appendChild(option);
+            option.value = model;
+            option.textContent = model;
+            modelSelect.appendChild(option);
         });
-        snSelect.disabled = false; // Unlock S/N selector
+        modelSelect.disabled = false;
     }
 });
 
-// 3. Handle S/N Selection (Load the actual manual data)
+// 3. Handle Model Selection (Unlock S/N dropdown)
+modelSelect.addEventListener('change', (e) => {
+    const selectedMake = makeSelect.value;
+    const selectedModel = e.target.value;
+    
+    // Reset lower fields
+    snSelect.innerHTML = '<option value="">3. Select S/N Range</option>';
+    snSelect.disabled = true;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    activeManualIndex = [];
+
+    if (selectedModel && fleetRegistry[selectedMake][selectedModel]) {
+        // Populate S/N ranges
+        fleetRegistry[selectedMake][selectedModel].forEach(snObj => {
+            const option = document.createElement('option');
+            option.value = snObj.file; 
+            option.textContent = snObj.range;
+            snSelect.appendChild(option);
+        });
+        snSelect.disabled = false;
+    }
+});
+
+// 4. Handle S/N Selection (Load the manual map)
 snSelect.addEventListener('change', (e) => {
     const targetFile = e.target.value;
     searchInput.disabled = true;
@@ -1863,18 +1891,15 @@ snSelect.addEventListener('change', (e) => {
     resultsDiv.innerHTML = '';
     
     if (targetFile) {
-        // Fetch the specific manual for this S/N
         resultsDiv.innerHTML = '<p style="color: var(--text-main); text-align: center;">Loading Manual Data...</p>';
         
         fetch(targetFile)
             .then(res => res.json())
             .then(data => {
                 activeManualIndex = data;
-                resultsDiv.innerHTML = ''; // Clear loading message
-                searchInput.disabled = false; // Unlock Search
+                resultsDiv.innerHTML = ''; 
+                searchInput.disabled = false; 
                 searchInput.focus();
-                
-                // Optional: Fire your haptic feedback here if you want!
                 if(typeof triggerHaptic === 'function') triggerHaptic('light'); 
             })
             .catch(err => {
@@ -1883,6 +1908,8 @@ snSelect.addEventListener('change', (e) => {
             });
     }
 });
+
+// (Keep your existing Step 4 / Search Execution logic exactly as it is!)
 
 // 4. The Search Execution
 searchInput.addEventListener('input', (e) => {
