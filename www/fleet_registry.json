@@ -1,0 +1,128 @@
+{
+    "152": [
+        {
+            "range": "15279406 - 15282031",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15283592 - 15284541",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15284542 - 15285161",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15285162 - 15285594",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15285834 - 15285939",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15285940 - 15286033",
+            "file": "manual_master_index.json"
+        }
+    ],
+    "152II": [
+        {
+            "range": "1979152 - 15282032",
+            "file": "manual_master_index.json"
+        }
+    ],
+    "F152": [
+        {
+            "range": "15201449 - 15201528",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15201529 - 15201673",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15201674 - 15201808",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15201809 - 15201893",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15201894 - 15201928",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "15201929 - F15201943",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "F15201944 - F15201952",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "F15201966 - F15201980",
+            "file": "manual_master_index.json"
+        }
+    ],
+    "A152": [
+        {
+            "range": "41500433 - 1520735",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "1520879 - 1520948",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "1520949 - 1520983",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "1520984 - A1521014",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "A1521015 - A1521025",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "1521026 - A1521027",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "1521028 - 1521049",
+            "file": "manual_master_index.json"
+        }
+    ],
+    "FA152": [
+        {
+            "range": "FA1520337 - FA1520347",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520348 - FA1520357",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520358 - FA1520372",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520373 - FA1520377",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520378 - FA1520382",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520383 - FA1520387",
+            "file": "manual_master_index.json"
+        },
+        {
+            "range": "FA1520388 - FA1520415",
+            "file": "manual_master_index.json"
+        }
+    ]
+}

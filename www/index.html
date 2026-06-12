@@ -25,6 +25,7 @@
       </div>
     </div>
     <nav class="tabs" style="overflow-x: auto; white-space: nowrap; display: flex; gap: 5px; padding-bottom: 5px;">
+      <button class="tab-btn" data-target="module-manuals">Manual Search</button>
       <button class="tab-btn active" data-target="module-wb">Weight & Balance</button>
       <button class="tab-btn" data-target="module-metal">Metal</button>
       <button class="tab-btn" data-target="module-elec">Electricity</button>
@@ -38,6 +39,26 @@
   </header>
 
   <main id="app-container">
+
+    <section class="calc-card" id="module-manuals" style="display: none;">
+  <h2>Fleet Reference Engine</h2>
+  
+  <div class="fleet-selector">
+      <select id="aircraftModel">
+          <option value="">1. Select Aircraft Model</option>
+      </select>
+      
+      <select id="aircraftSN" disabled>
+          <option value="">2. Select S/N Range</option>
+      </select>
+  </div>
+
+  <div class="input-group" style="margin-top: 15px;">
+    <input type="text" id="manualSearch" placeholder="Search procedure (e.g., 'Wheel Assembly')..." disabled>
+  </div>
+  
+  <div id="manualResults" style="margin-top: 15px;"></div>
+</section>
     
     <section class="calc-card" id="module-wb">
       <h2>Weight & Balance</h2>

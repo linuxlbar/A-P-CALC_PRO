@@ -1803,3 +1803,118 @@ pasteBadge.addEventListener('pointerdown', (e) => {
         }, 800);
     }
 });
+
+// =========================================================================
+// 16. FLEET REFERENCE ENGINE (MULTI-MANUAL)
+// =========================================================================
+let fleetRegistry = {};
+let activeManualIndex = [];
+
+// DOM Elements
+const modelSelect = document.getElementById('aircraftModel');
+const snSelect = document.getElementById('aircraftSN');
+const searchInput = document.getElementById('manualSearch');
+const resultsDiv = document.getElementById('manualResults');
+
+// 1. Load the Master Registry on startup
+fetch('fleet_registry.json')
+    .then(res => res.json())
+    .then(data => {
+        fleetRegistry = data;
+        // Populate the first dropdown with aircraft models
+        Object.keys(fleetRegistry).forEach(model => {
+            const option = document.createElement('option');
+            option.value = model;
+            option.textContent = model;
+            modelSelect.appendChild(option);
+        });
+    })
+    .catch(err => console.error("Fleet Registry failed to load:", err));
+
+// 2. Handle Model Selection (Unlock S/N dropdown)
+modelSelect.addEventListener('change', (e) => {
+    const selectedModel = e.target.value;
+    
+    // Reset lower fields
+    snSelect.innerHTML = '<option value="">2. Select S/N Range</option>';
+    snSelect.disabled = true;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    activeManualIndex = [];
+
+    if (selectedModel && fleetRegistry[selectedModel]) {
+        // Populate S/N ranges for this specific model
+        fleetRegistry[selectedModel].forEach(snObj => {
+            const option = document.createElement('option');
+            option.value = snObj.file; // We store the filename in the value
+            option.textContent = snObj.range;
+            snSelect.appendChild(option);
+        });
+        snSelect.disabled = false; // Unlock S/N selector
+    }
+});
+
+// 3. Handle S/N Selection (Load the actual manual data)
+snSelect.addEventListener('change', (e) => {
+    const targetFile = e.target.value;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    
+    if (targetFile) {
+        // Fetch the specific manual for this S/N
+        resultsDiv.innerHTML = '<p style="color: var(--text-main); text-align: center;">Loading Manual Data...</p>';
+        
+        fetch(targetFile)
+            .then(res => res.json())
+            .then(data => {
+                activeManualIndex = data;
+                resultsDiv.innerHTML = ''; // Clear loading message
+                searchInput.disabled = false; // Unlock Search
+                searchInput.focus();
+                
+                // Optional: Fire your haptic feedback here if you want!
+                if(typeof triggerHaptic === 'function') triggerHaptic('light'); 
+            })
+            .catch(err => {
+                resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading specific manual.</p>';
+                console.error(err);
+            });
+    }
+});
+
+// 4. The Search Execution
+searchInput.addEventListener('input', (e) => {
+    const rawInput = e.target.value.trim();
+    const queryWords = rawInput.toLowerCase().split(/\s+/); // Splits by space
+    resultsDiv.innerHTML = ''; 
+
+    if (rawInput.length < 3) return; // Wait until 3 characters are typed
+
+    // Smart Search: Check if EVERY word exists in either the title or the location
+    const matches = activeManualIndex.filter(item => {
+        let title = (item.title || "").toLowerCase();
+        let loc = (item.location || "").toLowerCase();
+        
+        return queryWords.every(word => title.includes(word) || loc.includes(word));
+    });
+
+    if (matches.length === 0) {
+        resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">No matches found in this manual.</p>';
+        return;
+    }
+
+    matches.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'reference-card';
+        div.innerHTML = `
+            <div class="ref-title">${m.title}</div>
+            <div class="ref-badges">
+                <div class="ref-location">${m.location || 'Unknown Location'}</div>
+                <div class="ref-pdf-page">PDF Pg. ${m.pdf_page}</div>
+            </div>
+        `;
+        resultsDiv.appendChild(div);
+    });
+});

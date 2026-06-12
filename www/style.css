@@ -730,3 +730,103 @@ body.glove-mode .calc-btn {
   color: #f3f4f6;           /* Light text */
   border: 1px solid #6b7280;
 }
+
+.manual-link {
+    width: 100%;
+    text-align: left;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    color: var(--text-main);
+}
+
+/* --- Manual Reference Cards --- */
+.reference-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-color);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ref-title {
+    font-weight: bold;
+    color: var(--text-main);
+    flex: 1;
+    padding-right: 15px;
+    line-height: 1.4;
+}
+
+.ref-location {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    background: var(--bg-alt);
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: right;
+    max-width: 50%; /* Prevents it from overlapping the title */
+    word-wrap: break-word;
+}
+
+[data-theme="dark"] .ref-location {
+    background: #374151; 
+    color: #60a5fa; 
+}
+
+/* --- Reference Card Badge Layout --- */
+.ref-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    min-width: 40%;
+}
+
+.ref-pdf-page {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--text-main);
+    opacity: 0.7; /* Makes it slightly faded so it doesn't compete with the main location */
+    text-align: right;
+}
+
+/* --- Fleet Selector Layout --- */
+.fleet-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--bg-alt);
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.fleet-selector select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+.fleet-selector select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+
+/* Dark mode adjustment for the page number background */
+[data-theme="dark"] .ref-page {
+    background: #374151; 
+    color: #60a5fa; /* Light blue for visibility */
+}
