@@ -118,11 +118,11 @@
         ],
         "152": [
             {
-                "range": "FAIS2 - FA1520378",
+                "range": "FAIS2 - FA1520358",
                 "file": "cessna_152_master_index.json"
             },
             {
-                "range": "FAIS2 - FA1520358",
+                "range": "FAIS2 - FA1520378",
                 "file": "cessna_152_master_index.json"
             },
             {
@@ -138,10 +138,6 @@
                 "file": "cessna_152_master_index.json"
             },
             {
-                "range": "A152 - 1520984",
-                "file": "cessna_152_master_index.json"
-            },
-            {
                 "range": "A152 - 1520879",
                 "file": "cessna_152_master_index.json"
             },
@@ -150,7 +146,7 @@
                 "file": "cessna_152_master_index.json"
             },
             {
-                "range": "FA152 - FA1520383",
+                "range": "A152 - 1520984",
                 "file": "cessna_152_master_index.json"
             },
             {
@@ -159,6 +155,10 @@
             },
             {
                 "range": "A152 - 681",
+                "file": "cessna_152_master_index.json"
+            },
+            {
+                "range": "FA152 - FA1520383",
                 "file": "cessna_152_master_index.json"
             },
             {
@@ -272,15 +272,11 @@
     "BEECHCRAFT": {
         "KING-AIR-90": [
             {
-                "range": "LU-318 - LJ-501",
+                "range": "LJ-1 - LJ-113",
                 "file": "beechcraft_king-air-90_master_index.json"
             },
             {
-                "range": "LU-76 - LJ-114",
-                "file": "beechcraft_king-air-90_master_index.json"
-            },
-            {
-                "range": "EXCEPT - LJ-76",
+                "range": "LU-502 - LJ-1062",
                 "file": "beechcraft_king-air-90_master_index.json"
             },
             {
@@ -292,73 +288,25 @@
                 "file": "beechcraft_king-air-90_master_index.json"
             },
             {
-                "range": "LJ-1 - LJ-113",
+                "range": "EXCEPT - LJ-76",
                 "file": "beechcraft_king-air-90_master_index.json"
             },
             {
-                "range": "LU-502 - LJ-1062",
+                "range": "LU-318 - LJ-501",
+                "file": "beechcraft_king-air-90_master_index.json"
+            },
+            {
+                "range": "LU-76 - LJ-114",
                 "file": "beechcraft_king-air-90_master_index.json"
             }
         ],
         "SUPER-KING-AIR-200": [
             {
-                "range": "BT-1 - BT-22",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-894 - BB-896",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BL-1 - BL-36",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BT-23 - BT-27",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
                 "range": "BL-37 - AND AFTER",
                 "file": "beechcraft_super-king-air-200_master_index.json"
             },
             {
-                "range": "BB-992 - AND AFTER",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-871 - BB-873",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-829 - BB-854",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-734 - BB-793",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-830 - BB-853",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-892 - BB-893",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-874 - BB-891",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-794 - BB-828",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
                 "range": "BB-895 - BB-912",
-                "file": "beechcraft_super-king-air-200_master_index.json"
-            },
-            {
-                "range": "BB-735 - BB-792",
                 "file": "beechcraft_super-king-air-200_master_index.json"
             },
             {
@@ -370,7 +318,59 @@
                 "file": "beechcraft_super-king-air-200_master_index.json"
             },
             {
+                "range": "BB-874 - BB-891",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
                 "range": "BB-913 - BB-990",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BL-1 - BL-36",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-734 - BB-793",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BT-1 - BT-22",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-794 - BB-828",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-829 - BB-854",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-830 - BB-853",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-892 - BB-893",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BT-23 - BT-27",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-992 - AND AFTER",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-871 - BB-873",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-894 - BB-896",
+                "file": "beechcraft_super-king-air-200_master_index.json"
+            },
+            {
+                "range": "BB-735 - BB-792",
                 "file": "beechcraft_super-king-air-200_master_index.json"
             },
             {
@@ -406,5 +406,6 @@
                 "file": "sabreliner_65_master_index.json"
             }
         ]
+  
     }
 }
