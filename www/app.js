@@ -186,23 +186,67 @@ drawerOverlay.addEventListener('click', toggleDrawer);
 
 // Reset Logic
 resetDrawerBtn.addEventListener('click', () => {
+    // 1. Clear all text boxes in the drawer
     quickDrawer.querySelectorAll('input').forEach(input => input.value = '');
+    
+    // 2. Safely reset the calculator engine variables
+    const calcHidden = document.getElementById('calcHiddenResult');
+    if (calcHidden) calcHidden.textContent = '--';
+    if (typeof parenCount !== 'undefined') parenCount = 0;
+    
+    // 3. Clear the torque extension output
+    const twRes = document.getElementById('twResult');
+    if (twRes) twRes.textContent = '--';
+    
     triggerHaptic('medium');
 });
 
-// Helper for Bi-Directional Math
-const syncInputs = (id1, id2, calc1to2, calc2to1) => {
-    const el1 = document.getElementById(id1);
-    const el2 = document.getElementById(id2);
-    el1.addEventListener('input', () => {
-        const val = parseFloat(el1.value);
-        el2.value = isNaN(val) ? '' : calc1to2(val).toFixed(4).replace(/\.?0+$/, '');
+// --- Torque Wrench Extension Calculator ---
+const twTarget = document.getElementById('twTarget');
+const twLength = document.getElementById('twLength');
+const twExt = document.getElementById('twExt');
+const twResult = document.getElementById('twResult');
+
+function calculateTorqueExt() {
+    const t = parseFloat(twTarget.value);
+    const l = parseFloat(twLength.value);
+    const e = parseFloat(twExt.value);
+
+    // Ensure all numbers exist and prevent dividing by zero
+    if (!isNaN(t) && !isNaN(l) && !isNaN(e) && (l + e) !== 0) {
+        const indicatedTorque = (t * l) / (l + e);
+        twResult.textContent = indicatedTorque.toFixed(2);
+    } else {
+        twResult.textContent = '--';
+    }
+}
+
+// Attach live listeners
+if (twTarget && twLength && twExt) {
+    [twTarget, twLength, twExt].forEach(input => {
+        input.addEventListener('input', calculateTorqueExt);
     });
-    el2.addEventListener('input', () => {
-        const val = parseFloat(el2.value);
-        el1.value = isNaN(val) ? '' : calc2to1(val).toFixed(4).replace(/\.?0+$/, '');
+}
+
+// --- Quick Converter Helper Function ---
+function syncInputs(id1, id2, calc1to2, calc2to1) {
+    const in1 = document.getElementById(id1);
+    const in2 = document.getElementById(id2);
+    
+    if (!in1 || !in2) return;
+
+    in1.addEventListener('input', () => {
+        const val = parseFloat(in1.value);
+        if (!isNaN(val)) in2.value = Number(calc1to2(val).toFixed(4));
+        else in2.value = '';
     });
-};
+
+    in2.addEventListener('input', () => {
+        const val = parseFloat(in2.value);
+        if (!isNaN(val)) in1.value = Number(calc2to1(val).toFixed(4));
+        else in1.value = '';
+    });
+}
 
 // Torque
 syncInputs('qcInLbs', 'qcFtLbs', (inLbs) => inLbs / 12, (ftLbs) => ftLbs * 12);
@@ -210,7 +254,6 @@ syncInputs('qcInLbs', 'qcFtLbs', (inLbs) => inLbs / 12, (ftLbs) => ftLbs * 12);
 syncInputs('qcCelsius', 'qcFahrenheit', (c) => (c * 9/5) + 32, (f) => (f - 32) * 5/9);
 // Metric / Imperial
 syncInputs('qcMm', 'qcInches', (mm) => mm / 25.4, (inches) => inches * 25.4);
-
 // Spacing (Fraction ↔ Decimal)
 const qcFrac = document.getElementById('qcFrac');
 const qcDec = document.getElementById('qcDec');
@@ -694,33 +737,6 @@ document.querySelectorAll('.calc-btn').forEach(btn => {
 
         calcDisplay.dispatchEvent(new Event('input', { bubbles: true }));
     });
-});
-
-// Fraction ↔ Decimal Logic
-function gcd(a, b) { return b ? gcd(b, a % b) : a; }
-
-document.getElementById('convFracBtn').addEventListener('click', () => {
-    const input = document.getElementById('fracDecInput').value.trim();
-    let result = "";
-    
-    if (input.includes('/')) {
-        const parts = input.split('/');
-        if (parts.length === 2) {
-            const num = parseFloat(parts[0]);
-            const den = parseFloat(parts[1]);
-            if (den !== 0) { result = (num / den).toString(); }
-        }
-    } else {
-        const dec = parseFloat(input);
-        if (!isNaN(dec)) {
-            const len = dec.toString().split('.')[1] ? dec.toString().split('.')[1].length : 0;
-            const denominator = Math.pow(10, len);
-            const numerator = dec * denominator;
-            const divisor = gcd(numerator, denominator);
-            result = `${numerator/divisor} / ${denominator/divisor}`;
-        }
-    }
-    document.getElementById('fracRes').textContent = result || "Invalid input";
 });
 
 // Proportions & Ratios Logic
@@ -1883,51 +1899,11 @@ modelSelect.addEventListener('change', (e) => {
     }
 });
 
-// 4. Handle S/N Selection (Load the manual map)
-snSelect.addEventListener('change', (e) => {
-    const targetFile = e.target.value;
-    searchInput.disabled = true;
-    searchInput.value = '';
-    resultsDiv.innerHTML = '';
-    
-    if (targetFile) {
-        resultsDiv.innerHTML = '<p style="color: var(--text-main); text-align: center;">Loading Manual Data...</p>';
-        
-        fetch(targetFile)
-            .then(res => res.json())
-            .then(data => {
-                activeManualIndex = data;
-                resultsDiv.innerHTML = ''; 
-                searchInput.disabled = false; 
-                searchInput.focus();
-                if(typeof triggerHaptic === 'function') triggerHaptic('light'); 
-            })
-            .catch(err => {
-                resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading specific manual.</p>';
-                console.error(err);
-            });
-    }
-});
-
-// (Keep your existing Step 4 / Search Execution logic exactly as it is!)
-
-// 4. The Search Execution
-searchInput.addEventListener('input', (e) => {
-    const rawInput = e.target.value.trim();
-    const queryWords = rawInput.toLowerCase().split(/\s+/); // Splits by space
+// --- Helper Function to Render the Cards ---
+function renderManualResults(matches) {
     resultsDiv.innerHTML = ''; 
 
-    if (rawInput.length < 3) return; // Wait until 3 characters are typed
-
-    // Smart Search: Check if EVERY word exists in either the title or the location
-    const matches = activeManualIndex.filter(item => {
-        let title = (item.title || "").toLowerCase();
-        let loc = (item.location || "").toLowerCase();
-        
-        return queryWords.every(word => title.includes(word) || loc.includes(word));
-    });
-
-    if (matches.length === 0) {
+    if (!matches || matches.length === 0) {
         resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">No matches found in this manual.</p>';
         return;
     }
@@ -1944,4 +1920,55 @@ searchInput.addEventListener('input', (e) => {
         `;
         resultsDiv.appendChild(div);
     });
+}
+
+// 4. Handle S/N Selection (Load the manual map AND display all)
+snSelect.addEventListener('change', (e) => {
+    const targetFile = e.target.value;
+    searchInput.disabled = true;
+    searchInput.value = '';
+    resultsDiv.innerHTML = '';
+    
+    if (targetFile) {
+        resultsDiv.innerHTML = '<p style="color: var(--text-main); text-align: center;">Loading Manual Data...</p>';
+        
+        fetch(targetFile)
+            .then(res => res.json())
+            .then(data => {
+                activeManualIndex = data;
+                searchInput.disabled = false; 
+                
+                // UPGRADE: Immediately render the entire manual table of contents
+                renderManualResults(activeManualIndex);
+                
+                if(typeof triggerHaptic === 'function') triggerHaptic('light'); 
+            })
+            .catch(err => {
+                resultsDiv.innerHTML = '<p style="color: #ef4444; text-align: center;">Error loading specific manual.</p>';
+                console.error(err);
+            });
+    }
+});
+
+// 5. The Search Execution (Live Filter)
+searchInput.addEventListener('input', (e) => {
+    const rawInput = e.target.value.trim();
+    
+    // UPGRADE: If the user clears the search bar, show the full manual again
+    if (rawInput === '') {
+        renderManualResults(activeManualIndex);
+        return;
+    }
+
+    const queryWords = rawInput.toLowerCase().split(/\s+/); 
+
+    // Smart Search: Check if EVERY word exists in either the title or the location
+    const matches = activeManualIndex.filter(item => {
+        let title = (item.title || "").toLowerCase();
+        let loc = (item.location || "").toLowerCase();
+        
+        return queryWords.every(word => title.includes(word) || loc.includes(word));
+    });
+
+    renderManualResults(matches);
 });

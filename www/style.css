@@ -647,7 +647,7 @@ body.glove-mode .calc-btn {
 .quick-drawer {
   position: fixed;
   top: 0;
-  right: -320px; /* Hidden off-screen by default */
+  right: -320px; 
   width: 320px;
   max-width: 85vw;
   height: 100vh;
@@ -656,8 +656,18 @@ body.glove-mode .calc-btn {
   box-shadow: -5px 0 25px rgba(0,0,0,0.3);
   transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   z-index: 1000;
-  padding: 20px;
   border-left: 1px solid var(--border-color);
+  /* Notice padding and overflow are gone from here! */
+}
+
+/* NEW: The Inner Scrolling Wrapper */
+.drawer-content-scroll {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  padding-bottom: 80px; /* Prevents the bottom from hitting the screen edge */
+  scrollbar-width: thin; 
 }
 
 .quick-drawer.open {

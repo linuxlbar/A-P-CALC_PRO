@@ -261,14 +261,6 @@
             }
         ]
     },
-    "AERONCA": {
-        "7A-CHAMPION": [
-            {
-                "range": "ALL",
-                "file": "aeronca_7a-champion_master_index.json"
-            }
-        ]
-    },
     "CIRRUS": {
         "SR22": [
             {
