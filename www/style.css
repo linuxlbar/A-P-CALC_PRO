@@ -840,3 +840,48 @@ body.glove-mode .calc-btn {
     background: #374151; 
     color: #60a5fa; /* Light blue for visibility */
 }
+
+/* --- Hangar Notes Drawer (Left Side) --- */
+.notes-drawer {
+  position: fixed;
+  top: 0;
+  left: -320px; /* Hidden off the left side of the screen */
+  width: 320px;
+  max-width: 85vw;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--card-bg);
+  box-shadow: 5px 0 25px rgba(0,0,0,0.3); /* Shadow casts to the right */
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+  border-right: 1px solid var(--border-color);
+}
+
+.notes-drawer.open {
+  left: 0;
+}
+
+.notes-tab {
+  position: absolute;
+  right: -35px; /* Hangs off the right edge of the drawer */
+  top: 35%; /* Placed slightly higher so it doesn't align perfectly with the tools tab */
+  transform: translateY(-50%);
+  width: 35px;
+  height: 100px;
+  background-color: #f59e0b; /* Amber/Yellow to mimic a legal pad */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 12px 12px 0;
+  cursor: pointer;
+  box-shadow: 3px 0 8px rgba(0,0,0,0.2);
+  z-index: 1001;
+}
+
+/* Dark mode adjustment for the notes area */
+[data-theme="dark"] #hangarNotesArea {
+  background-color: #262626 !important;
+  color: #f3f4f6 !important;
+  border-color: #404040 !important;
+}

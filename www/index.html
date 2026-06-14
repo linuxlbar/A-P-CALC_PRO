@@ -830,6 +830,27 @@
 
   <div id="drawerOverlay" class="drawer-overlay"></div>
 
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+
+  <div id="notesDrawer" class="notes-drawer">
+    <div id="notesTab" class="notes-tab">
+      <span style="transform: rotate(90deg); white-space: nowrap; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">NOTES</span>
+    </div>
+    
+    <div class="drawer-content-scroll" style="display: flex; flex-direction: column;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+        <h3 style="color: #f59e0b; margin: 0; font-size: 1.2rem;">Notes</h3>
+        <button id="clearNotesBtn" style="background: none; border: none; color: #ef4444; font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Clear All</button>
+      </div>
+      
+      <textarea id="hangarNotesArea" placeholder="Take notes here..." style="flex-grow: 1; width: 100%; resize: none; padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background-color: #fafafa; color: var(--text-main); font-family: monospace; font-size: 1rem; line-height: 1.5; outline: none;"></textarea>
+      
+      <button id="copyNotesBtn" class="action-btn" style="background-color: var(--text-muted); margin-top: 15px; flex-shrink: 0;">Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <div id="quickDrawer" class="quick-drawer">
+
   <div id="quickDrawer" class="quick-drawer">
     <div id="drawerTab" class="drawer-tab">
       <span style="transform: rotate(-90deg); white-space: nowrap; font-weight: bold; font-size: 0.8rem; letter-spacing: 1px;">TOOLS</span>

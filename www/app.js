@@ -169,20 +169,88 @@ gloveToggleBtn.addEventListener('click', () => {
     }
 });
 
-// --- Global Quick-Converter Drawer ---
+// --- Global Drawers (Tools & Notes) ---
 const quickDrawer = document.getElementById('quickDrawer');
 const drawerTab = document.getElementById('drawerTab');
 const drawerOverlay = document.getElementById('drawerOverlay');
 const resetDrawerBtn = document.getElementById('resetDrawerBtn');
 
+const notesDrawer = document.getElementById('notesDrawer');
+const notesTab = document.getElementById('notesTab');
+const hangarNotesArea = document.getElementById('hangarNotesArea');
+const clearNotesBtn = document.getElementById('clearNotesBtn');
+const copyNotesBtn = document.getElementById('copyNotesBtn');
+
+// Right Side: Tool Drawer Toggle
 function toggleDrawer() {
     quickDrawer.classList.toggle('open');
-    drawerOverlay.classList.toggle('visible');
+    if (quickDrawer.classList.contains('open')) {
+        notesDrawer.classList.remove('open'); // Close notes if open
+        drawerOverlay.classList.add('visible');
+    } else {
+        drawerOverlay.classList.remove('visible');
+    }
     triggerHaptic('light');
 }
 
+// Left Side: Notes Drawer Toggle
+function toggleNotesDrawer() {
+    notesDrawer.classList.toggle('open');
+    if (notesDrawer.classList.contains('open')) {
+        quickDrawer.classList.remove('open'); // Close tools if open
+        drawerOverlay.classList.add('visible');
+    } else {
+        drawerOverlay.classList.remove('visible');
+    }
+    triggerHaptic('light');
+}
+
+// Universal Overlay Close
+drawerOverlay.addEventListener('click', () => {
+    quickDrawer.classList.remove('open');
+    notesDrawer.classList.remove('open');
+    drawerOverlay.classList.remove('visible');
+});
+
 drawerTab.addEventListener('click', toggleDrawer);
-drawerOverlay.addEventListener('click', toggleDrawer);
+notesTab.addEventListener('click', toggleNotesDrawer);
+
+// --- Hangar Notes Logic (Auto-Save Engine) ---
+// 1. Load saved notes on boot
+const savedNotes = localStorage.getItem('hangarNotesData');
+if (savedNotes) {
+    hangarNotesArea.value = savedNotes;
+}
+
+// 2. Auto-save on every keystroke
+hangarNotesArea.addEventListener('input', () => {
+    localStorage.setItem('hangarNotesData', hangarNotesArea.value);
+});
+
+// 3. Clear Notes Logic
+clearNotesBtn.addEventListener('click', () => {
+    if (confirm("Clear all hangar notes? This cannot be undone.")) {
+        hangarNotesArea.value = '';
+        localStorage.removeItem('hangarNotesData');
+        triggerHaptic('medium');
+    }
+});
+
+// 4. Copy Notes to Clipboard
+copyNotesBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(hangarNotesArea.value);
+    
+    // Visual tactile feedback
+    const originalText = copyNotesBtn.textContent;
+    copyNotesBtn.textContent = 'Copied ✓';
+    copyNotesBtn.style.backgroundColor = 'var(--success-text)';
+    triggerHaptic('success');
+    
+    setTimeout(() => {
+        copyNotesBtn.textContent = originalText;
+        copyNotesBtn.style.backgroundColor = 'var(--text-muted)';
+    }, 1500);
+});
 
 // Reset Logic
 resetDrawerBtn.addEventListener('click', () => {
