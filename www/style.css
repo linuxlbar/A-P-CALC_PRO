@@ -1019,3 +1019,29 @@ body.glove-mode .calc-btn {
     0% { box-shadow: 0 0 0 4px var(--accent-color); border-color: var(--accent-color); }
     100% { box-shadow: 0 0 0 0 transparent; border-color: var(--border-color); }
 }
+
+/* =========================================================================
+   MOBILE RESPONSIVE TWEAKS
+   ========================================================================= */
+@media (max-width: 450px) {
+    /* Shrink the main title to prevent it from stacking oddly */
+    header h1 {
+        font-size: 1.1rem !important;
+        white-space: nowrap;
+    }
+    
+    /* Shrink the logo slightly */
+    header img {
+        height: 35px !important;
+    }
+
+    /* Tighten the gap between the 5 header icons */
+    .header-buttons {
+        gap: 6px !important;
+    }
+    
+    /* Shrink the icons slightly to fit them all on one line */
+    .header-buttons button {
+        font-size: 1.05rem !important;
+    }
+}

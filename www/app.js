@@ -2807,45 +2807,56 @@ function positionTourElement() {
     const targetEl = document.querySelector(step.target);
     
     if (!targetEl) {
-        tourNextBtn.click(); // Skip if element is hidden/missing
+        tourNextBtn.click(); 
         return;
     }
 
-    // Run any custom actions (like switching tabs) before highlighting
+    // 1. Temporarily hide the UI so it doesn't drag across the screen awkwardly
+    tourSpotlight.style.opacity = '0';
+    tourTooltip.style.opacity = '0';
+    tourTooltip.style.transform = 'translateY(10px)';
+
+    // 2. Trigger the tab switch and the smooth scroll animation
     if (step.action) step.action();
 
-    // Calculate exact physical coordinates of the target
-    const rect = targetEl.getBoundingClientRect();
-    const padding = 6;
+    // 3. WAIT 350 milliseconds for the scroll animation to fully stop before measuring!
+    setTimeout(() => {
+        const rect = targetEl.getBoundingClientRect();
+        const padding = 6;
 
-    // Move the Spotlight
-    tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
-    tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
-    tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
-    tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
+        // Move the Spotlight to the exact new coordinates
+        tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
+        tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
+        tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
+        tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
 
-    // Populate Tooltip Data
-    tourTitle.textContent = step.title;
-    tourText.innerHTML = step.text;
-    tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
+        // Populate Tooltip Data
+        tourTitle.textContent = step.title;
+        tourText.innerHTML = step.text;
+        tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
 
-    // Calculate Tooltip Position (Keep it on screen)
-    let tooltipTop = rect.bottom + window.scrollY + 15;
-    let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
+        // Calculate Tooltip Position
+        let tooltipTop = rect.bottom + window.scrollY + 15;
+        let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
 
-    // Bounce off edges
-    if (tooltipLeft < 10) tooltipLeft = 10;
-    if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
-    if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
+        // Bounce off edges so it never bleeds off the phone screen
+        if (tooltipLeft < 10) tooltipLeft = 10;
+        if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
+        if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
 
-    tourTooltip.style.top = `${tooltipTop}px`;
-    tourTooltip.style.left = `${tooltipLeft}px`;
-    tourTooltip.style.opacity = '1';
-    tourTooltip.style.transform = 'translateY(0)';
+        tourTooltip.style.top = `${tooltipTop}px`;
+        tourTooltip.style.left = `${tooltipLeft}px`;
+        
+        // 4. Fade the UI smoothly back into view
+        tourSpotlight.style.opacity = '1';
+        tourTooltip.style.opacity = '1';
+        tourTooltip.style.transform = 'translateY(0)';
 
-    // Button Logic
-    tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
-    tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+        // Button Logic
+        tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
+        tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+        
+    }, 350); // <-- This delay is the magic fix
 }
 
 function startTour() {
