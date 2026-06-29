@@ -985,3 +985,37 @@ body.glove-mode .calc-btn {
     background-color: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
 }
+
+/* =========================================================================
+   GLOBAL COMMAND PALETTE (SEARCH)
+   ========================================================================= */
+.global-search-result {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background-color 0.2s ease;
+}
+
+.global-search-result:last-child {
+    border-bottom: none;
+}
+
+.global-search-result:hover {
+    background-color: rgba(14, 165, 233, 0.05);
+}
+
+.global-search-match {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* The 'Target Lock' animation when scrolling to a tool */
+.search-highlight {
+    animation: highlightFlash 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes highlightFlash {
+    0% { box-shadow: 0 0 0 4px var(--accent-color); border-color: var(--accent-color); }
+    100% { box-shadow: 0 0 0 0 transparent; border-color: var(--border-color); }
+}

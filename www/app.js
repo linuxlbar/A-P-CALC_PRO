@@ -2501,6 +2501,399 @@ searchInput.addEventListener('input', (e) => {
     renderManualResults(matches);
 });
 
+// =========================================================================
+// 17. GLOBAL COMMAND PALETTE (SMART SEARCH)
+// =========================================================================
+const globalSearchBtn = document.getElementById('globalSearchBtn');
+const globalSearchOverlay = document.getElementById('globalSearchOverlay');
+const globalSearchInput = document.getElementById('globalSearchInput');
+const globalSearchResults = document.getElementById('globalSearchResults');
+const closeGlobalSearch = document.getElementById('closeGlobalSearch');
+
+let searchIndex = [];
+
+// 1. Dynamically scan the app and build a map of every tool
+function buildSearchIndex() {
+    searchIndex = [];
+    document.querySelectorAll('.calc-card').forEach(card => {
+        const tabId = card.id;
+        const tabBtn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
+        const tabName = tabBtn ? tabBtn.textContent : 'Unknown Tab';
+
+        // Find every <h3> tag
+        card.querySelectorAll('h3').forEach(h3 => {
+            // STRIP OUT the X-Ray button text so it doesn't show up in search results
+            const rawTitle = h3.textContent.replace('💡 Show Me How', '').replace('Hide Guide', '').trim();
+            const toolBlock = h3.parentElement; 
+            
+            searchIndex.push({
+                title: rawTitle,
+                tabId: tabId,
+                tabName: tabName,
+                element: toolBlock
+            });
+        });
+    });
+}
+
+// 2. Open Search Modal
+globalSearchBtn.addEventListener('click', () => {
+    buildSearchIndex(); 
+    globalSearchOverlay.style.display = 'block';
+    globalSearchInput.value = '';
+    globalSearchResults.innerHTML = '';
+    
+    setTimeout(() => globalSearchInput.focus(), 100);
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+});
+
+// 3. Close Search Modal
+function closeSearch() {
+    globalSearchOverlay.style.display = 'none';
+}
+closeGlobalSearch.addEventListener('click', closeSearch);
+globalSearchOverlay.addEventListener('click', (e) => {
+    if (e.target === globalSearchOverlay) closeSearch();
+});
+
+// 4. Live Filtering & Hierarchical Routing
+globalSearchInput.addEventListener('input', (e) => {
+    const query = e.target.value.toLowerCase().trim();
+    globalSearchResults.innerHTML = '';
+
+    if (query.length < 2) return; 
+
+    // Search both the tool title and the tab name
+    const matches = searchIndex.filter(item => 
+        item.title.toLowerCase().includes(query) || 
+        item.tabName.toLowerCase().includes(query)
+    );
+
+    if (matches.length === 0) {
+        globalSearchResults.innerHTML = '<div style="padding: 15px; color: var(--text-muted); text-align: center;">No tools found.</div>';
+        return;
+    }
+
+    // 5. Group the results by Module/Tab
+    const groupedResults = {};
+    matches.forEach(match => {
+        if (!groupedResults[match.tabName]) {
+            groupedResults[match.tabName] = { tabId: match.tabId, tools: [] };
+        }
+        groupedResults[match.tabName].tools.push(match);
+    });
+
+    // 6. Build the Nested UI
+    const regex = new RegExp(`(${query})`, 'gi');
+
+    Object.keys(groupedResults).forEach(tabName => {
+        const group = groupedResults[tabName];
+
+        // A. Render the Parent Module Header
+        const moduleHeader = document.createElement('div');
+        moduleHeader.className = 'global-search-result';
+        moduleHeader.style.cssText = 'background-color: rgba(0,0,0,0.2); font-weight: bold; color: var(--primary-color); border-bottom: 2px solid var(--border-color);';
+        
+        const highlightedTabName = tabName.replace(regex, '<span class="global-search-match">$1</span>');
+        moduleHeader.innerHTML = `📁 ${highlightedTabName} Module`;
+
+        // Click Action: Jump to Tab (Top of page)
+        moduleHeader.addEventListener('click', () => {
+            closeSearch();
+            if (typeof triggerHaptic === 'function') triggerHaptic('medium');
+            const targetTabBtn = document.querySelector(`.tab-btn[data-target="${group.tabId}"]`);
+            if (targetTabBtn) {
+                targetTabBtn.click();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+        globalSearchResults.appendChild(moduleHeader);
+
+        // B. Render the specific Tools nested beneath it
+        group.tools.forEach(match => {
+            const toolDiv = document.createElement('div');
+            toolDiv.className = 'global-search-result';
+            // Indent the tool slightly to visually nest it under the folder
+            toolDiv.style.cssText = 'padding-left: 35px; border-bottom: 1px solid var(--border-color); font-size: 1.05rem;';
+            
+            const highlightedTitle = match.title.replace(regex, '<span class="global-search-match">$1</span>');
+            toolDiv.innerHTML = `↳ ${highlightedTitle}`;
+
+            // Click Action: Jump to Tab AND scroll directly to the Tool
+            toolDiv.addEventListener('click', () => {
+                closeSearch();
+                if (typeof triggerHaptic === 'function') triggerHaptic('medium');
+
+                const targetTabBtn = document.querySelector(`.tab-btn[data-target="${match.tabId}"]`);
+                if (targetTabBtn) targetTabBtn.click();
+
+                setTimeout(() => {
+                    match.element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    match.element.classList.remove('search-highlight');
+                    void match.element.offsetWidth; 
+                    match.element.classList.add('search-highlight');
+                }, 50); 
+            });
+            globalSearchResults.appendChild(toolDiv);
+        });
+    });
+});
+
+// =========================================================================
+// 18. GUIDED SPOTLIGHT TOUR ENGINE
+// =========================================================================
+
+const tourSteps = [
+    {
+        target: '#startTourBtn',
+        title: 'Tutorial',
+        text: 'Tap this question mark anytime you might need a quick walkthrough of the app\'s features and tools.'
+    },
+    {
+        target: '#globalSearchBtn',
+        title: 'Global Search',
+        text: 'Tap this magnifying glass to instantly search and jump to any tool, formula, or calculator across the entire app.'
+    },
+    {
+        target: '#wakeToggleBtn',
+        title: 'Keep Awake',
+        text: 'Turn this on to lock your screen awake indefinitely.'
+    },
+    {
+        target: '#gloveToggleBtn',
+        title: 'Glove Mode',
+        text: 'Turn this on to disable haptics and increase the size of buttons, inputs, and text for gloved hands.'
+    },
+    {
+        target: '#themeToggleBtn',
+        title: 'Night Mode',
+        text: 'Toggle dark mode to reduce screen glare'
+    },
+    {
+        target: '#notesTab',
+        title: 'Hangar Notes',
+        text: 'Tap or swipe this left drawer open anytime to jot down clearances, torques, or part numbers.'
+    },
+    {
+        target: '#drawerTab',
+        title: 'Quick Tools',
+        text: 'Tap or swipe this right drawer open for a calculator and instant temperature, torque, and measurement conversions without leaving your current tool.'
+    },
+    {
+        target: '.tabs .tab-btn:nth-child(1)', 
+        title: 'Manual Search',
+        text: 'Access the Fleet Reference Engine. Select your aircraft make, model, and serial number to instantly load and search its specific maintenance manuals.',
+        action: () => {
+            const btn = document.querySelector('.tabs .tab-btn:nth-child(1)');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-wb"]', 
+        title: 'Weight & Balance',
+        text: 'Calculate total aircraft CG, ballast shifts, and complex equipment alterations.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-wb"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-metal"]', 
+        title: 'Sheet Metal',
+        text: 'Automated rivet layout. Instant pitch calculators, sightline formulas, bend allowances, and stack thickness tools.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-metal"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-elec"]', 
+        title: 'Electricity',
+        text: 'Decode up to 6-band resistors instantly, calculate AC reactance/impedance, and size AWG wires perfectly to AC 43.13-1B standards.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-elec"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-math"]', 
+        title: 'General Math',
+        text: 'Quickly solve percentage problems and calculate proportions/ratios.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-math"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-physics"]', 
+        title: 'Physics',
+        text: 'Hydraulics (Pascal\'s Law), BMEP, Mechanical Advantage, mechanical work, and cylinder displacement.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-physics"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-temp"]', 
+        title: 'Temperature',
+        text: 'Instantly cross-convert Fahrenheit, Celsius, Kelvin, and Rankine scales simultaneously.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-temp"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-measure"]', 
+        title: 'Measurement',
+        text: 'Instantly locate decimal measurements on a scale. Convert exact decimal measurements to their nearest standard fraction in real-time.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-measure"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-ref"]', 
+        title: 'Charts & Formulas',
+        text: 'Your digital pocket reference. Quickly look up AC 43.13 charts, wiring limits, and mathematical formulas without leaving the app.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-ref"]');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+   {
+        target: '.tabs', 
+        title: 'Auto-Save & Offline',
+        text: `
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 5px;">
+                <div style="display: flex; gap: 10px; align-items: start;">
+                    <span style="font-size: 1.2rem; line-height: 1;">💾</span>
+                    <div style="line-height: 1.3;"><strong>Auto-Save:</strong> Automatically saves the state of your tools.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: start;">
+                    <span style="font-size: 1.2rem; line-height: 1;">📋</span>
+                    <div style="line-height: 1.3;"><strong>Smart Clipboard:</strong> Detect last calculation and allow 1-tap paste into any field.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: start;">
+                    <span style="font-size: 1.2rem; line-height: 1;">⛓️‍💥</span>
+                    <div style="line-height: 1.3;"><strong>100% Offline:</strong> No internet connection or cellular service required.</div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: start;">
+                    <span style="font-size: 1.2rem; line-height: 1;">🔒</span>
+                    <div style="line-height: 1.3;"><strong>Privacy First:</strong> Data is stored locally and never leaves your device.</div>
+                </div>
+            </div>
+        `,
+        action: () => {
+            const btn = document.querySelector('.tabs .tab-btn:nth-child(1)');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    }
+];
+
+let currentTourStep = 0;
+const tourShield = document.getElementById('tourShield');
+const tourSpotlight = document.getElementById('tourSpotlight');
+const tourTooltip = document.getElementById('tourTooltip');
+const tourTitle = document.getElementById('tourTitle');
+const tourText = document.getElementById('tourText');
+const tourStepCounter = document.getElementById('tourStepCounter');
+const tourNextBtn = document.getElementById('tourNextBtn');
+const tourPrevBtn = document.getElementById('tourPrevBtn');
+const tourSkipBtn = document.getElementById('tourSkipBtn');
+const startTourBtn = document.getElementById('startTourBtn');
+
+function positionTourElement() {
+    const step = tourSteps[currentTourStep];
+    const targetEl = document.querySelector(step.target);
+    
+    if (!targetEl) {
+        tourNextBtn.click(); // Skip if element is hidden/missing
+        return;
+    }
+
+    // Run any custom actions (like switching tabs) before highlighting
+    if (step.action) step.action();
+
+    // Calculate exact physical coordinates of the target
+    const rect = targetEl.getBoundingClientRect();
+    const padding = 6;
+
+    // Move the Spotlight
+    tourSpotlight.style.top = `${rect.top + window.scrollY - padding}px`;
+    tourSpotlight.style.left = `${rect.left + window.scrollX - padding}px`;
+    tourSpotlight.style.width = `${rect.width + (padding * 2)}px`;
+    tourSpotlight.style.height = `${rect.height + (padding * 2)}px`;
+
+    // Populate Tooltip Data
+    tourTitle.textContent = step.title;
+    tourText.innerHTML = step.text;
+    tourStepCounter.textContent = `${currentTourStep + 1} / ${tourSteps.length}`;
+
+    // Calculate Tooltip Position (Keep it on screen)
+    let tooltipTop = rect.bottom + window.scrollY + 15;
+    let tooltipLeft = rect.left + window.scrollX - (280 / 2) + (rect.width / 2);
+
+    // Bounce off edges
+    if (tooltipLeft < 10) tooltipLeft = 10;
+    if (tooltipLeft + 280 > window.innerWidth - 10) tooltipLeft = window.innerWidth - 290;
+    if (tooltipTop + 150 > window.innerHeight + window.scrollY) tooltipTop = rect.top + window.scrollY - 160;
+
+    tourTooltip.style.top = `${tooltipTop}px`;
+    tourTooltip.style.left = `${tooltipLeft}px`;
+    tourTooltip.style.opacity = '1';
+    tourTooltip.style.transform = 'translateY(0)';
+
+    // Button Logic
+    tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
+    tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
+}
+
+function startTour() {
+    currentTourStep = 0;
+    tourShield.style.display = 'block';
+    tourSpotlight.style.display = 'block';
+    tourTooltip.style.display = 'block';
+    tourTooltip.style.opacity = '0';
+    tourTooltip.style.transform = 'translateY(10px)';
+    
+    if (typeof triggerHaptic === 'function') triggerHaptic('medium');
+    
+    // Give the UI a microsecond to render before measuring coordinates
+    setTimeout(positionTourElement, 50);
+}
+
+function endTour() {
+    tourShield.style.display = 'none';
+    tourSpotlight.style.display = 'none';
+    tourTooltip.style.opacity = '0';
+    setTimeout(() => tourTooltip.style.display = 'none', 400);
+    
+    // Save to Omni-Vault so it never auto-runs again
+    localStorage.setItem('hasSeenTour', 'true');
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+}
+
+tourNextBtn.addEventListener('click', () => {
+    if (currentTourStep < tourSteps.length - 1) {
+        currentTourStep++;
+        positionTourElement();
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    } else {
+        endTour();
+    }
+});
+
+tourPrevBtn.addEventListener('click', () => {
+    if (currentTourStep > 0) {
+        currentTourStep--;
+        positionTourElement();
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    }
+});
+
+tourSkipBtn.addEventListener('click', endTour);
+if (startTourBtn) startTourBtn.addEventListener('click', startTour);
+
 // --- BOOT & EVENT TRIGGERS ---
 
 // 1. Unpack the vault immediately when the app opens
@@ -2536,3 +2929,10 @@ if (canvasTracker) {
 
 // 7. Paint the Resistor tool on boot
 setTimeout(calculateResistor, 100);
+
+// 8. Run First-Time User Onboarding Tour
+setTimeout(() => {
+    if (!localStorage.getItem('hasSeenTour')) {
+        startTour();
+    }
+}, 500); // Wait half a second for the app to settle before springing the tour

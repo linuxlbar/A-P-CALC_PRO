@@ -19,6 +19,8 @@
       </div>
       
       <div style="display: flex; gap: 15px; align-items: center;">
+        <button id="startTourBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="App Tour">❓</button>
+        <button id="globalSearchBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Global Search">🔍</button>
         <button id="wakeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: rgba(255,255,255,0.5); transition: all 0.2s ease;" title="Keep Screen Awake">💡</button>
         <button id="gloveToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; filter: grayscale(100%); opacity: 0.6; transition: all 0.2s ease;" title="Glove Mode">🧤</button>
         <button id="themeToggleBtn" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: white; transition: transform 0.2s ease;" title="Dark Mode">🌙</button>
@@ -1374,7 +1376,7 @@
         </div>
       </div>
     </div> 
-  </div> <script src="app.js"></script>
+  </div> 
 
   <div id="imgModal" class="img-modal">
     <span class="close-modal">&times;</span>
@@ -1399,6 +1401,34 @@
       <button id="agreeBtn" class="action-btn">Close</button>
     </div>
   </div>
+ 
+<div id="globalSearchOverlay" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px);">
+    <div style="width: 90%; max-width: 600px; margin: 15vh auto 0 auto; position: relative;">
+      <input type="text" id="globalSearchInput" placeholder="Search for a tool (e.g., 'Torque', 'Gravity')..." style="width: 100%; padding: 15px 45px 15px 20px; font-size: 1.1rem; border-radius: var(--radius-lg); border: 2px solid var(--accent-color); background: var(--card-bg); color: var(--text-main); outline: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <span id="closeGlobalSearch" style="position: absolute; right: 15px; top: 12px; font-size: 1.8rem; color: var(--text-muted); cursor: pointer; line-height: 1;">&times;</span>
+      <div id="globalSearchResults" style="margin-top: 10px; background: var(--card-bg); border-radius: var(--radius-lg); max-height: 50vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5);"></div>
+    </div>
+  </div>
 
+  <div id="tourShield" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99998; cursor: default;"></div>
+  
+  <div id="tourSpotlight" style="display: none; position: absolute; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.85), 0 0 0 2px var(--accent-color); transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 99999; pointer-events: none;"></div>
+  
+  <div id="tourTooltip" style="display: none; position: absolute; width: 280px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100000; transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); opacity: 0; transform: translateY(10px);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h4 id="tourTitle" style="color: var(--primary-color); margin: 0; font-size: 1.1rem;">Title</h4>
+      <span id="tourStepCounter" style="color: var(--text-muted); font-size: 0.8rem; font-weight: bold;">1/5</span>
+    </div>
+    <p id="tourText" style="color: var(--text-main); font-size: 0.9rem; margin-bottom: 15px; line-height: 1.4;"></p>
+    <div style="display: flex; justify-content: space-between;">
+      <button id="tourSkipBtn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;">Skip Tour</button>
+      <div style="display: flex; gap: 8px;">
+        <button id="tourPrevBtn" style="background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; display: none;">Back</button>
+        <button id="tourNextBtn" style="background: var(--primary-color); border: none; color: white; padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold;">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
