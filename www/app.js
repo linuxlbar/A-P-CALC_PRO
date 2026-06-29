@@ -2811,15 +2811,14 @@ function positionTourElement() {
         return;
     }
 
-    // 1. Temporarily hide the UI so it doesn't drag across the screen awkwardly
-    tourSpotlight.style.opacity = '0';
+    // 1. Temporarily hide ONLY the tooltip. Leave the spotlight alone so the screen stays dark!
     tourTooltip.style.opacity = '0';
     tourTooltip.style.transform = 'translateY(10px)';
 
     // 2. Trigger the tab switch and the smooth scroll animation
     if (step.action) step.action();
 
-    // 3. WAIT 350 milliseconds for the scroll animation to fully stop before measuring!
+    // 3. WAIT 350 milliseconds for the scroll animation to fully stop before moving the light
     setTimeout(() => {
         const rect = targetEl.getBoundingClientRect();
         const padding = 6;
@@ -2847,8 +2846,7 @@ function positionTourElement() {
         tourTooltip.style.top = `${tooltipTop}px`;
         tourTooltip.style.left = `${tooltipLeft}px`;
         
-        // 4. Fade the UI smoothly back into view
-        tourSpotlight.style.opacity = '1';
+        // 4. Fade the Tooltip smoothly back into view
         tourTooltip.style.opacity = '1';
         tourTooltip.style.transform = 'translateY(0)';
 
@@ -2856,7 +2854,7 @@ function positionTourElement() {
         tourPrevBtn.style.display = currentTourStep === 0 ? 'none' : 'block';
         tourNextBtn.textContent = currentTourStep === tourSteps.length - 1 ? 'Finish' : 'Next';
         
-    }, 350); // <-- This delay is the magic fix
+    }, 350); 
 }
 
 function startTour() {
