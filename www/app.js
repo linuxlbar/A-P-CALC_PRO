@@ -385,27 +385,35 @@ document.querySelectorAll('.calc-card').forEach(card => {
 });
 
 // =========================================================================
-// "SHOW ME HOW" X-RAY ENGINE (V2)
+// "SHOW ME HOW" X-RAY ENGINE (V3 - Dropdown Support)
 // =========================================================================
 function initializeXRayEngine() {
     document.querySelectorAll('.calc-card > div').forEach(toolBlock => {
         
-        const inputsWithHints = toolBlock.querySelectorAll('input[data-hint]');
+        // FIX: Tell the engine to look for BOTH inputs and select dropdowns!
+        const inputsWithHints = toolBlock.querySelectorAll('input[data-hint], select[data-hint]');
         if (inputsWithHints.length === 0) return;
 
         // 1. Physically construct the hidden hint boxes safely
-        inputsWithHints.forEach(input => {
-            const parent = input.parentElement;
-            if (parent.querySelector('.xray-hint')) return; // Skip if already built
+        inputsWithHints.forEach(element => {
+            const parent = element.parentElement;
+            
+            // SMART PLACEMENT: If inside a flex container, target the outer input-group
+            const targetGroup = (parent.style.display === 'flex' && !parent.classList.contains('input-group')) 
+                                ? parent.parentElement 
+                                : parent;
+            
+            // Prevent duplicate hint boxes from being created
+            if (targetGroup.querySelector('.xray-hint')) return; 
 
             const hintBox = document.createElement('div');
             hintBox.className = 'xray-hint';
-            hintBox.innerHTML = `↳ ${input.getAttribute('data-hint')}`;
+            hintBox.innerHTML = `↳ ${element.getAttribute('data-hint')}`;
             
-            if(parent.classList.contains('input-group')) {
-                parent.appendChild(hintBox);
+            if (targetGroup.classList.contains('input-group')) {
+                targetGroup.appendChild(hintBox);
             } else {
-                input.insertAdjacentElement('afterend', hintBox);
+                parent.insertAdjacentElement('afterend', hintBox);
             }
         });
 
@@ -420,7 +428,7 @@ function initializeXRayEngine() {
                 toolBlock.classList.toggle('xray-active');
                 showMeBtn.classList.toggle('active');
                 showMeBtn.innerHTML = toolBlock.classList.contains('xray-active') ? 'Hide Guide' : '💡 Show Me How';
-                triggerHaptic('light');
+                if (typeof triggerHaptic === 'function') triggerHaptic('light');
             });
 
             header.style.display = 'flex';
@@ -449,6 +457,12 @@ document.addEventListener('click', (e) => {
             // Maintain specific string formatting for certain tools
             if (output.id === 'cylExtOut' || output.id === 'cylRetOut') {
                 output.textContent = '-- lbs';
+            } else if (output.id === 'outXl' || output.id === 'outXc' || output.id === 'outZ') {
+                output.textContent = '-- Ω';
+            } else if (output.id === 'wireAwgOut') {
+                output.textContent = '-- AWG';
+            } else if (output.id === 'wireDropOut') {
+                output.textContent = '-- V';
             } else if (output.id.includes('ED') || output.id === 'outBA' || output.id === 'outSB' || output.id === 'outFlat' || output.id === 'outSL') {
                 output.textContent = '--"';
             } else {
@@ -797,6 +811,160 @@ document.getElementById('calcSgBtn').addEventListener('click', () => {
     document.getElementById('sgCorrectedOut').textContent = correctedSg.toFixed(3);
 });
 
+// --- AC Reactance & Impedance Logic ---
+document.getElementById('calcAcBtn').addEventListener('click', () => {
+    
+    // 1. Grab raw inputs and multiply them by their selected unit dropdown values
+    const fRaw = parseFloat(document.getElementById('acFreq').value);
+    const fMult = parseFloat(document.getElementById('acFreqUnit').value) || 1;
+    const f = fRaw * fMult;
+
+    const rRaw = parseFloat(document.getElementById('acRes').value) || 0;
+    const rMult = parseFloat(document.getElementById('acResUnit').value) || 1;
+    const r = rRaw * rMult;
+
+    const lRaw = parseFloat(document.getElementById('acInd').value);
+    const lMult = parseFloat(document.getElementById('acIndUnit').value) || 1;
+    const l = lRaw * lMult;
+
+    const cRaw = parseFloat(document.getElementById('acCap').value);
+    const cMult = parseFloat(document.getElementById('acCapUnit').value) || 1;
+    const c = cRaw * cMult;
+
+    // 2. BULLETPROOF UX: Soft-fail if they forget the Frequency
+    if (isNaN(fRaw)) {
+        document.getElementById('outZ').textContent = "Need Freq";
+        document.getElementById('outXl').textContent = '-- Ω';
+        document.getElementById('outXc').textContent = '-- Ω';
+        return;
+    }
+
+    let xl = 0;
+    let xc = 0;
+
+    // 3. Calculate Inductive Reactance (X_L = 2 * PI * f * L)
+    if (!isNaN(lRaw)) {
+        xl = 2 * Math.PI * f * l;
+        document.getElementById('outXl').textContent = xl.toFixed(2) + ' Ω';
+    } else {
+        document.getElementById('outXl').textContent = '0.00 Ω';
+    }
+
+    // 4. Calculate Capacitive Reactance (X_C = 1 / (2 * PI * f * C))
+    if (!isNaN(cRaw) && c > 0) {
+        xc = 1 / (2 * Math.PI * f * c);
+        document.getElementById('outXc').textContent = xc.toFixed(2) + ' Ω';
+    } else if (cRaw === 0) {
+        document.getElementById('outXc').textContent = 'Infinite Ω';
+    } else {
+        document.getElementById('outXc').textContent = '0.00 Ω';
+    }
+
+    // 5. Calculate Total Impedance (Z = sqrt(R^2 + (X_L - X_C)^2))
+    if (!isNaN(rRaw) || !isNaN(lRaw) || !isNaN(cRaw)) {
+         const z = Math.sqrt(Math.pow(r, 2) + Math.pow(xl - xc, 2));
+         document.getElementById('outZ').textContent = z.toFixed(2) + ' Ω';
+    } else {
+         document.getElementById('outZ').textContent = '-- Ω';
+    }
+});
+
+// --- AWG Wire Size Estimator Logic ---
+const awgData = [
+    { awg: '24', bundle: 2, free: 3, ohms: 25.67 },
+    { awg: '22', bundle: 3, free: 4, ohms: 16.14 },
+    { awg: '20', bundle: 4, free: 6, ohms: 10.15 },
+    { awg: '18', bundle: 6, free: 10, ohms: 6.38 },
+    { awg: '16', bundle: 9, free: 13, ohms: 4.02 },
+    { awg: '14', bundle: 12, free: 18, ohms: 2.53 },
+    { awg: '12', bundle: 17, free: 23, ohms: 1.59 },
+    { awg: '10', bundle: 24, free: 33, ohms: 1.00 },
+    { awg: '8', bundle: 33, free: 46, ohms: 0.63 },
+    { awg: '6', bundle: 45, free: 60, ohms: 0.40 },
+    { awg: '4', bundle: 60, free: 80, ohms: 0.25 },
+    { awg: '2', bundle: 80, free: 100, ohms: 0.16 },
+    { awg: '1', bundle: 100, free: 120, ohms: 0.13 },
+    { awg: '0 (1/0)', bundle: 120, free: 150, ohms: 0.10 },
+    { awg: '00 (2/0)', bundle: 140, free: 175, ohms: 0.08 }
+];
+
+document.getElementById('calcWireBtn').addEventListener('click', () => {
+    const sysVolt = parseFloat(document.getElementById('wireSysVolt').value);
+    const loadType = document.getElementById('wireLoadType').value;
+    const routing = document.getElementById('wireRouting').value;
+    const amps = parseFloat(document.getElementById('wireAmps').value);
+    const len = parseFloat(document.getElementById('wireLen').value);
+
+    // Soft-Fail UX
+    if (isNaN(sysVolt) || isNaN(amps) || isNaN(len) || sysVolt <= 0 || amps <= 0 || len <= 0) {
+        document.getElementById('wireAwgOut').textContent = "Fill All Fields";
+        document.getElementById('wireDropOut').textContent = "-- V";
+        document.getElementById('wireLimitOut').textContent = "--";
+        return;
+    }
+
+    // 1. Establish Max Allowed Voltage Drop
+    let maxVd = 0;
+    
+    // Snap to the exact AC 43.13-1B chart values for standard voltages
+    if (sysVolt === 14) maxVd = (loadType === 'cont') ? 0.5 : 1.0;
+    else if (sysVolt === 28) maxVd = (loadType === 'cont') ? 1.0 : 2.0;
+    else if (sysVolt === 115) maxVd = (loadType === 'cont') ? 4.0 : 8.0;
+    else if (sysVolt === 200) maxVd = (loadType === 'cont') ? 7.0 : 14.0;
+    else {
+        // For custom voltages (like 127V), dynamically apply the FAA's underlying ratio
+        // Continuous limit is ~3.57% of total voltage. Intermittent is double.
+        maxVd = (loadType === 'cont') ? (sysVolt * 0.0357) : (sysVolt * 0.0714);
+    }
+
+    let selectedWire = null;
+    let limitingFactor = "";
+    let actualDrop = 0;
+
+    // 2. Scan the table from thinnest (AWG 24) to thickest (AWG 00)
+    for (let i = 0; i < awgData.length; i++) {
+        const wire = awgData[i];
+        
+        // Test A: Does it melt? (Ampacity)
+        const meetsAmpacity = amps <= wire[routing];
+        
+        // Test B: Does it drop too much voltage? (Resistance calculation)
+        const runResistance = (wire.ohms / 1000) * len;
+        const drop = amps * runResistance;
+        const meetsDrop = drop <= maxVd;
+
+        // If it passes both tests, we found our wire!
+        if (meetsAmpacity && meetsDrop) {
+            selectedWire = wire;
+            actualDrop = drop;
+            
+            // Diagnostics: Figure out WHY we had to go this thick
+            if (i > 0) {
+                const prevWire = awgData[i - 1];
+                const prevMeetsAmp = amps <= prevWire[routing];
+                const prevMeetsDrop = (amps * ((prevWire.ohms / 1000) * len)) <= maxVd;
+                
+                if (!prevMeetsAmp && prevMeetsDrop) limitingFactor = "Current Rating (Ampacity)";
+                else if (prevMeetsAmp && !prevMeetsDrop) limitingFactor = `Voltage Drop Limit (${maxVd.toFixed(2)}V max)`;
+                else limitingFactor = "Amps & Voltage Drop";
+            } else {
+                limitingFactor = "Minimum Safe Gauge"; 
+            }
+            break;
+        }
+    }
+
+    // 3. Render Output
+    if (selectedWire) {
+        document.getElementById('wireAwgOut').textContent = selectedWire.awg + " AWG";
+        document.getElementById('wireDropOut').textContent = actualDrop.toFixed(2) + " V";
+        document.getElementById('wireLimitOut').textContent = limitingFactor;
+    } else {
+        document.getElementById('wireAwgOut').textContent = "Exceeds 2/0";
+        document.getElementById('wireDropOut').textContent = "-- V";
+        document.getElementById('wireLimitOut').textContent = "Out of Range";
+    }
+});
 
 // --- 5. GENERAL MATH MODULE ---
 function safeEval(expr) {

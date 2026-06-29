@@ -908,6 +908,16 @@ body.glove-mode .calc-btn {
 /* When the tool is activated, highlight the boxes and reveal the text */
 .xray-active .xray-hint {
   display: block;
+  border-top: 1px solid rgba(14, 165, 233, 0.3); /* Adds a subtle top line to complete the box underneath flex rows */
+}
+
+/* Apply the flat bottom and blue border to BOTH the input and select menus */
+.xray-active input[data-hint],
+.xray-active select[data-hint],
+.xray-active input[data-hint] + select {
+  border-color: var(--accent-color) !important;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important; 
+  background-color: rgba(14, 165, 233, 0.02) !important;
 }
 
 .xray-active input[data-hint] {

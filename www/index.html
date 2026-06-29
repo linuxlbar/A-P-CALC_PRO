@@ -391,6 +391,147 @@
       </div>
     </div>
   </div>
+
+  <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">AC Reactance & Impedance</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Calculates inductive/capacitive reactance and total impedance.</p>
+
+        <div class="input-group">
+          <label>Frequency (f)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acFreq" placeholder="e.g., 400" style="flex: 2;"
+                   data-hint="The frequency of the AC power source. Aircraft power is typically 400 Hz.">
+            <select id="acFreqUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">Hz</option>
+              <option value="1000">kHz</option>
+              <option value="1000000">MHz</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Resistance (R)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acRes" placeholder="e.g., 50" style="flex: 2;"
+                   data-hint="The standard DC resistance of the circuit.">
+            <select id="acResUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">Ω</option>
+              <option value="1000">kΩ</option>
+              <option value="1000000">MΩ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Inductance (L)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acInd" placeholder="e.g., 5" style="flex: 2;"
+                   data-hint="The inductance of the coil. Select mH (millihenries) or µH (microhenries) from the dropdown.">
+            <select id="acIndUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">H</option>
+              <option value="0.001" selected>mH</option>
+              <option value="0.000001">µH</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Capacitance (C)</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="number" inputmode="decimal" id="acCap" placeholder="e.g., 2.2" style="flex: 2;"
+                   data-hint="The capacitance value. Microfarads (µF) are automatically selected as they are the most common.">
+            <select id="acCapUnit" style="flex: 1; min-width: 80px;">
+              <option value="1">F</option>
+              <option value="0.001">mF</option>
+              <option value="0.000001" selected>µF</option>
+              <option value="0.000000001">nF</option>
+              <option value="0.000000000001">pF</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="calcAcBtn" class="action-btn">Calculate AC Values</button>
+        <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
+
+        <div class="result-display" style="margin-top: 15px; text-align: left; padding: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Inductive Reactance (X<sub>L</sub>):</span>
+            <strong id="outXl" style="font-size: 1.1rem;">-- Ω</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Capacitive Reactance (X<sub>C</sub>):</span>
+            <strong id="outXc" style="font-size: 1.1rem;">-- Ω</strong>
+          </div>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <div style="display: flex; justify-content: space-between; color: var(--primary-color);">
+            <span><strong>Total Impedance (Z):</strong></span>
+            <strong id="outZ" style="font-size: 1.3rem;">-- Ω</strong>
+          </div>
+        </div>
+      </div>
+
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">AWG Wire Size Estimator</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Calculates gauge based on AC 43.13-1B limits (Voltage Drop & Ampacity).</p>
+
+        <div class="input-group">
+          <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>System Volts</label>
+            <input type="number" inputmode="decimal" id="wireSysVolt" placeholder="e.g., 28" 
+                   data-hint="The operating voltage. Standard aircraft use 14, 28, 115, or 200.">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Load Type</label>
+            <select id="wireLoadType" data-hint="Continuous loads operate for more than 2 minutes.">
+              <option value="cont" selected>Continuous</option>
+              <option value="int">Intermittent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Routing Method</label>
+          <select id="wireRouting" data-hint="Bundled wires trap heat and require thicker gauges for high currents.">
+            <option value="bundle" selected>Bundled / Conduit</option>
+            <option value="free">Free Air</option>
+          </select>
+        </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Current (Amps)</label>
+            <input type="number" inputmode="decimal" id="wireAmps" placeholder="e.g., 10" 
+                   data-hint="The max current draw of the component.">
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Length (Feet)</label>
+            <input type="number" inputmode="decimal" id="wireLen" placeholder="e.g., 15" 
+                   data-hint="The physical length of the wire from the bus to the component.">
+          </div>
+        </div>
+
+        <button id="calcWireBtn" class="action-btn" style="margin-top: 15px;">Calculate Wire Size</button>
+        <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
+
+        <div class="result-display" style="margin-top: 15px; text-align: left; padding: 15px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 0.95rem;">Limiting Factor:</span>
+            <strong id="wireLimitOut" style="font-size: 0.95rem; color: var(--text-muted);">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Estimated Drop:</span>
+            <strong id="wireDropOut" style="font-size: 1.1rem;">-- V</strong>
+          </div>
+          <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
+          <div style="display: flex; justify-content: space-between; color: var(--primary-color);">
+            <span><strong>Recommended Size:</strong></span>
+            <strong id="wireAwgOut" style="font-size: 1.3rem;">-- AWG</strong>
+          </div>
+        </div>
+      </div>
+
 </section>
 
     <section class="calc-card" id="module-math" style="display: none;">
@@ -832,6 +973,18 @@
 
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Motor Efficiency (Watts):</p>
           <code class="formula-block" style="margin-bottom: 15px;">Watts = (Horsepower × 746) ÷ Efficiency Decimal</code>
+
+          <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">AC Circuits</h4>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Inductive Reactance (X<sub>L</sub>):</p>
+          <code class="formula-block">X<sub>L</sub> = 2 × π × f × L<br><span style="font-size: 0.75rem;">f = frequency (Hz), L = inductance (Henries)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Capacitive Reactance (X<sub>C</sub>):</p>
+          <code class="formula-block">X<sub>C</sub> = 1 ÷ (2 × π × f × C)<br><span style="font-size: 0.75rem;">f = frequency (Hz), C = capacitance (Farads)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Total Impedance (Z):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">Z = √(R² + (X<sub>L</sub> - X<sub>C</sub>)²)</code>
           
           <img src="ac-wire-chart.png" alt="AC 43.13-1B Table 11-9 Wire Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
           
