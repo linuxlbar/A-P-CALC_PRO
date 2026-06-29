@@ -532,6 +532,117 @@
         </div>
       </div>
 
+      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 2rem;">
+        <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Resistor Color Decoder</h3>
+        <p class="subtitle" style="margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted);">Supports 4, 5, and 6 band precision resistors.</p>
+
+        <div class="input-group" style="margin-bottom: 15px;">
+          <select id="resBandCount" data-hint="Select the total number of bands on the resistor.">
+            <option value="4" selected>4-Band (Standard)</option>
+            <option value="5">5-Band (Precision)</option>
+            <option value="6">6-Band (Precision + Temp Coeff)</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>1st Digit</label>
+            <select id="resD1" class="res-color-select" data-hint="First digit of the value.">
+              <option value="0" data-color="#000000" data-text="#ffffff">Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff" selected>Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>2nd Digit</label>
+            <select id="resD2" class="res-color-select" data-hint="Second digit of the value.">
+              <option value="0" data-color="#000000" data-text="#ffffff" selected>Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+          <div class="input-group" id="groupD3" style="flex: 1; margin-bottom: 0; display: none;">
+            <label>3rd Digit</label>
+            <select id="resD3" class="res-color-select" data-hint="Third digit (Precision resistors only).">
+              <option value="0" data-color="#000000" data-text="#ffffff" selected>Black (0)</option>
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (1)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (2)</option>
+              <option value="3" data-color="#F97316" data-text="#000000">Orange (3)</option>
+              <option value="4" data-color="#EAB308" data-text="#000000">Yellow (4)</option>
+              <option value="5" data-color="#22C55E" data-text="#ffffff">Green (5)</option>
+              <option value="6" data-color="#3B82F6" data-text="#ffffff">Blue (6)</option>
+              <option value="7" data-color="#A855F7" data-text="#ffffff">Violet (7)</option>
+              <option value="8" data-color="#6B7280" data-text="#ffffff">Gray (8)</option>
+              <option value="9" data-color="#ffffff" data-text="#000000">White (9)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Multiplier</label>
+            <select id="resMult" class="res-color-select" data-hint="Multiplies the preceding digits.">
+              <option value="1" data-color="#000000" data-text="#ffffff">Black (x1)</option>
+              <option value="10" data-color="#8B4513" data-text="#ffffff">Brown (x10)</option>
+              <option value="100" data-color="#EF4444" data-text="#ffffff" selected>Red (x100)</option>
+              <option value="1000" data-color="#F97316" data-text="#000000">Orange (x1K)</option>
+              <option value="10000" data-color="#EAB308" data-text="#000000">Yellow (x10K)</option>
+              <option value="100000" data-color="#22C55E" data-text="#ffffff">Green (x100K)</option>
+              <option value="1000000" data-color="#3B82F6" data-text="#ffffff">Blue (x1M)</option>
+              <option value="0.1" data-color="#EAB308" data-text="#000000">Gold (x0.1)</option>
+              <option value="0.01" data-color="#9CA3AF" data-text="#000000">Silver (x0.01)</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex: 1; margin-bottom: 0;">
+            <label>Tolerance</label>
+            <select id="resTol" class="res-color-select" data-hint="Manufacturing accuracy.">
+              <option value="1" data-color="#8B4513" data-text="#ffffff">Brown (±1%)</option>
+              <option value="2" data-color="#EF4444" data-text="#ffffff">Red (±2%)</option>
+              <option value="0.5" data-color="#22C55E" data-text="#ffffff">Green (±0.5%)</option>
+              <option value="0.25" data-color="#3B82F6" data-text="#ffffff">Blue (±0.25%)</option>
+              <option value="0.1" data-color="#A855F7" data-text="#ffffff">Violet (±0.1%)</option>
+              <option value="0.05" data-color="#6B7280" data-text="#ffffff">Gray (±0.05%)</option>
+              <option value="5" data-color="#EAB308" data-text="#000000" selected>Gold (±5%)</option>
+              <option value="10" data-color="#9CA3AF" data-text="#000000">Silver (±10%)</option>
+            </select>
+          </div>
+          <div class="input-group" id="groupTemp" style="flex: 1; margin-bottom: 0; display: none;">
+            <label>Temp Coeff</label>
+            <select id="resTemp" class="res-color-select" data-hint="How much the resistance changes per degree.">
+              <option value="100" data-color="#8B4513" data-text="#ffffff" selected>Brown (100 ppm)</option>
+              <option value="50" data-color="#EF4444" data-text="#ffffff">Red (50 ppm)</option>
+              <option value="15" data-color="#F97316" data-text="#000000">Orange (15 ppm)</option>
+              <option value="25" data-color="#EAB308" data-text="#000000">Yellow (25 ppm)</option>
+              <option value="10" data-color="#3B82F6" data-text="#ffffff">Blue (10 ppm)</option>
+              <option value="5" data-color="#A855F7" data-text="#ffffff">Violet (5 ppm)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="result-display" style="margin-top: 15px; text-align: center; padding: 15px;">
+          <p style="font-size: 0.95rem; margin-bottom: 4px; color: var(--success-text); opacity: 0.8;">Resistance Value:</p>
+          <strong id="resOutTotal" style="font-size: 1.8rem; color: var(--success-text);">-- Ω</strong>
+          <p id="resOutStandard" style="font-size: 0.95rem; margin-top: 2px; margin-bottom: 6px; color: var(--success-text); opacity: 0.9; display: none;">(-- Ω)</p>
+          <p style="font-size: 0.9rem; margin-top: 4px; color: var(--success-text);">Tolerance: <strong id="resOutTol">±--%</strong></p>
+          <p id="resOutRange" style="font-size: 0.85rem; margin-top: 4px; margin-bottom: 4px; color: var(--success-text); opacity: 0.8;">Range: --</p>
+          <p id="resOutTemp" style="font-size: 0.9rem; margin-top: 4px; font-weight: bold; color: var(--success-text); display: none;">Temp Coeff: -- ppm/K</p>
+        </div>
+      </div>
+
 </section>
 
     <section class="calc-card" id="module-math" style="display: none;">
@@ -987,6 +1098,22 @@
           <code class="formula-block" style="margin-bottom: 15px;">Z = √(R² + (X<sub>L</sub> - X<sub>C</sub>)²)</code>
           
           <img src="ac-wire-chart.png" alt="AC 43.13-1B Table 11-9 Wire Chart" style="width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: block; margin-top: 10px;">
+
+          <hr style="border-top: 1px solid var(--border-color); margin: 15px 0;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Resistor Color Codes</h4>
+          
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">4-Band (Standard):</p>
+          <code class="formula-block">Value = (Digit 1, Digit 2) × Multiplier<br><span style="font-size: 0.75rem;">Band 4 = Tolerance</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">5-Band & 6-Band (Precision):</p>
+          <code class="formula-block">Value = (Digit 1, Digit 2, Digit 3) × Multiplier<br><span style="font-size: 0.75rem;">Band 5 = Tolerance | Band 6 = Temp Coefficient (ppm/K)</span></code>
+
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px; margin-bottom: 4px;">Color Values (Digits 0-9):</p>
+          <code class="formula-block" style="margin-bottom: 15px;">
+            <strong>0:</strong> Black | <strong>1:</strong> Brown | <strong>2:</strong> Red | <strong>3:</strong> Orange | <strong>4:</strong> Yellow<br>
+            <strong>5:</strong> Green | <strong>6:</strong> Blue  | <strong>7:</strong> Violet | <strong>8:</strong> Gray   | <strong>9:</strong> White<br><br>
+            <span style="font-size: 0.75rem;"><strong>Gold:</strong> ×0.1 Mult / ±5% Tol | <strong>Silver:</strong> ×0.01 Mult / ±10% Tol</span>
+          </code>
           
         </div>
 

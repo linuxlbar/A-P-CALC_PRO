@@ -966,6 +966,122 @@ document.getElementById('calcWireBtn').addEventListener('click', () => {
     }
 });
 
+// =========================================================================
+// --- RESISTOR COLOR DECODER LOGIC (4, 5, 6 Band) ---
+// =========================================================================
+
+function calculateResistor() {
+    const bandCount = parseInt(document.getElementById('resBandCount').value);
+    
+    // Grab all DOM elements
+    const d1El = document.getElementById('resD1');
+    const d2El = document.getElementById('resD2');
+    const d3El = document.getElementById('resD3');
+    const multEl = document.getElementById('resMult');
+    const tolEl = document.getElementById('resTol');
+    const tempEl = document.getElementById('resTemp');
+    
+    if (!d1El || !d2El || !multEl || !tolEl) return;
+
+    // 1. Dynamic UI Toggle (Slide the extra boxes in and out)
+    document.getElementById('groupD3').style.display = (bandCount >= 5) ? 'flex' : 'none';
+    document.getElementById('groupTemp').style.display = (bandCount === 6) ? 'flex' : 'none';
+
+    // 2. Build array of only the currently VISIBLE dropdowns
+    const activeSelects = [d1El, d2El, multEl, tolEl];
+    if (bandCount >= 5) activeSelects.push(d3El);
+    if (bandCount === 6) activeSelects.push(tempEl);
+
+    // 3. Instantly repaint the active dropdowns to match their physical colors
+    activeSelects.forEach(select => {
+        const option = select.options[select.selectedIndex];
+        select.style.backgroundColor = option.getAttribute('data-color');
+        select.style.color = option.getAttribute('data-text');
+        select.style.fontWeight = 'bold'; 
+    });
+
+    // 4. Extract raw mathematical values
+    const val1 = parseInt(d1El.value);
+    const val2 = parseInt(d2El.value);
+    const val3 = (bandCount >= 5) ? parseInt(d3El.value) : 0;
+    const mult = parseFloat(multEl.value);
+    const tol = parseFloat(tolEl.value);
+    const temp = parseInt(tempEl.value);
+
+    // 5. Compute base resistance based on band configuration
+    let resistance = 0;
+    if (bandCount === 4) {
+        resistance = ((val1 * 10) + val2) * mult;
+    } else {
+        resistance = ((val1 * 100) + (val2 * 10) + val3) * mult;
+    }
+    
+    // Calculate boundaries
+    const tolMath = resistance * (tol / 100);
+    const lowerLimit = resistance - tolMath;
+    const upperLimit = resistance + tolMath;
+    
+    // Format strings
+    let standardString = resistance.toLocaleString('en-US', { maximumFractionDigits: 4 });
+    let lowerString = lowerLimit.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    let upperString = upperLimit.toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+    let scaledValue = resistance;
+    let unit = 'Ω';
+
+    // Scale to kΩ or MΩ
+    if (scaledValue >= 1000000) {
+        scaledValue = scaledValue / 1000000;
+        unit = 'MΩ';
+    } else if (scaledValue >= 1000) {
+        scaledValue = scaledValue / 1000;
+        unit = 'kΩ';
+    }
+
+    const resString = Number.isInteger(scaledValue) ? scaledValue.toString() : scaledValue.toFixed(2).replace(/\.?0+$/, '');
+
+    // 6. Push to DOM
+    document.getElementById('resOutTotal').textContent = `${resString} ${unit}`;
+    
+    const standardOut = document.getElementById('resOutStandard');
+    if (standardOut) {
+        if (unit !== 'Ω') {
+            standardOut.style.display = 'block';
+            standardOut.textContent = `(${standardString} Ω)`;
+        } else {
+            standardOut.style.display = 'none'; 
+        }
+    }
+    
+    document.getElementById('resOutTol').textContent = `±${tol}%`;
+    const rangeOut = document.getElementById('resOutRange');
+    if (rangeOut) {
+        rangeOut.textContent = `Range: ${lowerString} Ω to ${upperString} Ω`;
+    }
+
+    // Toggle the Temp Coeff text output
+    const tempOut = document.getElementById('resOutTemp');
+    if (bandCount === 6) {
+        tempOut.style.display = 'block';
+        tempOut.textContent = `Temp Coeff: ${temp} ppm/K`;
+    } else {
+        tempOut.style.display = 'none';
+    }
+}
+
+// --- EVENT LISTENERS ---
+// Triggers math calculation if ANY of the boxes are touched
+const resistorInputs = ['resBandCount', 'resD1', 'resD2', 'resD3', 'resMult', 'resTol', 'resTemp'];
+resistorInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+        el.addEventListener('change', () => {
+            calculateResistor();
+            if (typeof triggerHaptic === 'function') triggerHaptic('light'); 
+        });
+    }
+});
+
 // --- 5. GENERAL MATH MODULE ---
 function safeEval(expr) {
     try {
@@ -2417,3 +2533,6 @@ if (canvasTracker) {
     canvasTracker.addEventListener('touchend', saveOmniVault);
 }
 });
+
+// 7. Paint the Resistor tool on boot
+setTimeout(calculateResistor, 100);
