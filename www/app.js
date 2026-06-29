@@ -1782,6 +1782,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set the flag so this logic doesn't trigger on next load
             localStorage.setItem('disclaimerAccepted', 'true');
             if (legalModal) legalModal.style.display = 'none';
+            
+            // Chain the Onboarding Tour to fire after the disclaimer is accepted
+    if (!localStorage.getItem('hasSeenTour')) {
+        setTimeout(startTour, 400); // The 400ms delay gives your disclaimer modal time to gracefully fade away before the tour begins!
+    }
         });
     }
 
@@ -2939,9 +2944,3 @@ if (canvasTracker) {
 // 7. Paint the Resistor tool on boot
 setTimeout(calculateResistor, 100);
 
-// 8. Run First-Time User Onboarding Tour
-setTimeout(() => {
-    if (!localStorage.getItem('hasSeenTour')) {
-        startTour();
-    }
-}, 500); // Wait half a second for the app to settle before springing the tour
