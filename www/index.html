@@ -66,18 +66,20 @@
   <div id="manualResults" style="margin-top: 15px;"></div>
 </section>
          
+    <!-- ==========================================
+         14 CFR EXPLORER MODULE
+         ========================================== -->
     <section class="calc-card" id="module-cfr" style="display: none;">
-      <h2>14 CFR Index</h2>
-      <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
-        
-       <!-- PERMANENT HEADER BUTTON -->
       
+      <!-- PERMANENT HEADER BUTTON (FLEXBOX ALIGNED) -->
+      <h2 style="display: flex; justify-content: space-between; align-items: center;">
+        14 CFR Index
         <button id="cfrSyncBtn" style="background: var(--accent-color); border: none; color: white; padding: 5px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: bold; cursor: pointer; display: none; transition: all 0.2s ease;">↓ Download</button>
       </h2>
 
       <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
         
-        <!-- DISAPPEARING STATUS MONITOR (Button Removed) -->
+        <!-- DISAPPEARING STATUS MONITOR -->
         <div id="cfrDbStatus" style="display: flex; justify-content: center; align-items: center; background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-color); padding: 10px; border-radius: var(--radius-sm); margin-bottom: 15px; transition: all 0.4s ease; max-height: 100px; opacity: 1; overflow: hidden;">
             <span id="cfrStatusText" style="font-size: 0.85rem; font-weight: bold; color: var(--accent-color);">Checking offline database...</span>
         </div>
@@ -85,10 +87,8 @@
         <div class="input-group">
           <input type="text" id="cfrSearchInput" placeholder="Search (e.g., 'Maintenance', 'Part 43')..." disabled>
         </div>
-        
-        
 
-        <!-- NEW: Hierarchical Navigation Breadcrumb -->
+        <!-- Hierarchical Navigation Breadcrumb -->
         <div id="cfrNavHeader" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <button id="cfrBackBtn" class="action-btn" style="width: auto; padding: 4px 12px; margin: 0; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); font-size: 0.85rem;">← Back to Parts</button>
             <span id="cfrCurrentFolder" style="font-size: 0.9rem; font-weight: bold; color: var(--primary-color);"></span>
@@ -97,7 +97,7 @@
         <div id="cfrResultsContainer" style="display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; padding-right: 5px;">
             <!-- JavaScript will inject the hierarchy here -->
         </div>
-        </div>
+        
       </div>
     </section>
     <!-- ==========================================

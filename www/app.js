@@ -3457,6 +3457,7 @@ function checkDbStatus() {
             cfrSyncBtn.style.color = "var(--success-text)";
             cfrSyncBtn.style.border = "1px solid var(--success-text)";
             
+            
             // Pre-load the first few results visually
             searchCFR('');
 
