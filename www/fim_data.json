@@ -1,0 +1,42 @@
+{
+  "cessna_172": {
+    "airframeName": "Cessna 172",
+    "systems": {
+      "elec_dead": {
+        "category": "Airframe",
+        "makeModel": "Cessna 172",
+        "systemName": "Electrical - Complete Failure",
+        "nodes": {
+          "start": {
+            "title": "Main Bus Check",
+            "text": "Turn the Master Switch (BAT) ON. Does the turn coordinator spool up, or do any interior lights illuminate?",
+            "options": [
+              { "label": "Yes, systems have power", "target": "check_alternator" },
+              { "label": "No, aircraft is completely dead", "target": "check_battery" }
+            ]
+          },
+          "check_alternator": {
+            "title": "Alternator Output",
+            "text": "Start the engine. Does the ammeter show a positive charge?",
+            "options": [
+              { "label": "Yes", "target": "fix_normal" },
+              { "label": "No", "target": "fix_alt_belt" }
+            ]
+          },
+          "check_battery": {
+            "title": "Battery Voltage",
+            "text": "Measure voltage directly across the battery terminals. Is it >24V?",
+            "options": [
+              { "label": "Yes", "target": "fix_contactor" },
+              { "label": "No", "target": "fix_charge_batt" }
+            ]
+          },
+          "fix_normal": { "title": "System Normal", "text": "Electrical system is operating normally.", "options": [{ "label": "End Diagnostics", "target": "start" }] },
+          "fix_alt_belt": { "title": "Inspect Alternator", "text": "Inspect alternator belt tension and ALT field circuit breaker.", "options": [{ "label": "Restart", "target": "start" }] },
+          "fix_contactor": { "title": "Inspect Contactor", "text": "Battery is good. Inspect battery contactor and ground strap.", "options": [{ "label": "Restart", "target": "start" }] },
+          "fix_charge_batt": { "title": "Dead Battery", "text": "Battery is depleted. Remove, charge, and perform capacity test.", "options": [{ "label": "Restart", "target": "start" }] }
+        }
+      }
+    }
+  }
+}

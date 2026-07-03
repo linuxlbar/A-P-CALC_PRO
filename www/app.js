@@ -344,8 +344,8 @@ qcDec.addEventListener('input', () => {
 });
 // --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
-    // Skip the Reference Library - nothing to clear there
-    if (card.id === 'module-ref') return;
+    // Skip the Reference Library and the FIM Engine
+    if (card.id === 'module-ref' || card.id === 'module-fim') return;
 
     const header = card.querySelector('h2');
     if (!header) return;
@@ -372,11 +372,6 @@ document.querySelectorAll('.calc-card').forEach(card => {
             output.textContent = '--';
         });
 
-        // Special handling for the Sketchpad (clears the canvas)
-        if (card.id === 'module-sketch') {
-            elements = [];
-            redraw();
-        }
         
         // Tactile feedback for the button itself
         resetBtn.style.transform = 'scale(0.9)';
@@ -1798,53 +1793,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// =========================================================================
-// SKETCHPAD 2.0: OBJECT-ORIENTED ENGINE
-// =========================================================================
-const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const clearBtn = document.getElementById('clearCanvasBtn');
-
-let currentTool = 'freehand';
-let currentColor = '#003366';
-let currentWidth = 3;
-
-// The Vault: Stores the mathematical data of everything drawn
-let elements = [];
-let isDrawing = false;
-let isDragging = false;
-let selectedElement = null;
-let startX, startY;
-
-// --- UI EVENT LISTENERS ---
-const toolBtns = document.querySelectorAll('.tool-btn');
-toolBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        toolBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentTool = btn.getAttribute('data-tool');
-        selectedElement = null; // Drop anything currently being held
-        redraw();
-    });
-});
-
-const colorBtns = document.querySelectorAll('.color-btn');
-colorBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        colorBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentColor = btn.getAttribute('data-color');
-        currentWidth = btn.classList.contains('eraser-btn') ? 15 : 3;
-        
-        // Bonus Feature: Change color of an already placed shape
-        if (selectedElement && currentTool === 'move') {
-            selectedElement.color = currentColor;
-            if (btn.classList.contains('eraser-btn')) selectedElement.width = 15;
-            redraw();
-        }
-    });
-});
-
 // --- CORE ENGINE LOGIC ---
 function getCoordinates(event) {
     const rect = canvas.getBoundingClientRect();
@@ -1940,103 +1888,6 @@ function startPosition(e) {
     }
 }
 
-function draw(e) {
-    e.preventDefault();
-    const pos = getCoordinates(e);
-
-    // If grabbing something, shift all its coordinates
-    if (isDragging && selectedElement) {
-        const dx = pos.x - startX;
-        const dy = pos.y - startY;
-        
-        if (selectedElement.type === 'freehand' || selectedElement.type === 'eraser') {
-            selectedElement.points.forEach(p => { p.x += dx; p.y += dy; });
-        } else if (selectedElement.type === 'line') {
-            selectedElement.x1 += dx; selectedElement.y1 += dy;
-            selectedElement.x2 += dx; selectedElement.y2 += dy;
-        } else {
-            selectedElement.x += dx; selectedElement.y += dy;
-        }
-        
-        startX = pos.x;
-        startY = pos.y;
-        redraw();
-        return;
-    }
-
-    if (!isDrawing) return;
-
-    // Live update the coordinates of the shape currently being drawn
-    const currentShape = elements[elements.length - 1];
-
-    if (currentTool === 'freehand' || currentTool === 'eraser') {
-        currentShape.points.push({x: pos.x, y: pos.y});
-    } else if (currentTool === 'line') {
-        currentShape.x2 = pos.x; currentShape.y2 = pos.y;
-    } else if (currentTool === 'square') {
-        currentShape.w = pos.x - startX; currentShape.h = pos.y - startY;
-    } else if (currentTool === 'circle') {
-        currentShape.r = Math.sqrt(Math.pow((pos.x - startX), 2) + Math.pow((pos.y - startY), 2));
-    }
-    redraw();
-}
-
-function endPosition() {
-    isDrawing = false;
-    isDragging = false;
-    
-    // Deletes accidental empty clicks so they don't clutter the vault
-    if (elements.length > 0) {
-        const last = elements[elements.length - 1];
-        if ((last.type === 'freehand' || last.type === 'eraser') && last.points.length < 2) elements.pop();
-        else if (last.type === 'square' && last.w === 0) elements.pop();
-        else if (last.type === 'circle' && last.r === 0) elements.pop();
-        else if (last.type === 'line' && last.x1 === last.x2 && last.y1 === last.y2) elements.pop();
-    }
-    redraw();
-}
-
-// Mouse & Touch Hooks
-canvas.addEventListener('mousedown', startPosition);
-canvas.addEventListener('mouseup', endPosition);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseleave', endPosition);
-canvas.addEventListener('touchstart', startPosition, { passive: false });
-canvas.addEventListener('touchend', endPosition);
-canvas.addEventListener('touchmove', draw, { passive: false });
-
-clearBtn.addEventListener('click', () => {
-    elements = [];
-    selectedElement = null;
-    redraw();
-});
-
-// --- UNDO LOGIC ---
-const undoBtn = document.getElementById('undoBtn');
-
-function undoLastAction() {
-    if (elements.length > 0) {
-        elements.pop(); // Deletes the most recent shape from the Vault
-        selectedElement = null; // Drops the item if you were currently holding it
-        redraw(); // Repaints the screen without that item
-    }
-}
-
-undoBtn.addEventListener('click', undoLastAction);
-
-// Pro-Tip: Keyboard Shortcut (Ctrl + Z)
-document.addEventListener('keydown', (e) => {
-    // Only trigger if the sketchpad is actually visible
-    if (document.getElementById('module-sketch').style.display !== 'none') {
-        if (e.ctrlKey && e.key === 'z') {
-            undoLastAction();
-        }
-    }
-});
-
-// Boot up the engine
-redraw();
-
 // ==============================
 // 14.  GLOBAL DATA PERSISTENCE
 // ==============================
@@ -2062,8 +1913,6 @@ function saveOmniVault() {
             })),
             metalLayers: Array.from(document.querySelectorAll('.layer-input')).map(input => input.value)
         },
-        // Grab the raw mathematical data from the Sketchpad engine
-        sketchpad: typeof elements !== 'undefined' ? elements : []
     };
 
     // 1. Grab all static text, number, and dropdown inputs automatically
@@ -2213,12 +2062,6 @@ function loadOmniVault() {
             }
         }
 
-        // 4. Restore the Sketchpad
-        if (state.sketchpad && typeof elements !== 'undefined' && typeof redraw === 'function') {
-            elements = state.sketchpad;
-            redraw();
-        }
-
         // 5. Trigger Visual Updates 
         const rulerInput = document.getElementById('measureInput');
         if (rulerInput && rulerInput.value) rulerInput.dispatchEvent(new Event('input'));
@@ -2232,6 +2075,13 @@ function loadOmniVault() {
 }
 
 
+
+// 5. Auto-save when a user clicks any button
+document.addEventListener('click', (e) => {
+    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+        setTimeout(saveOmniVault, 50);
+    }
+});
 
 // 6. Auto-save when a user finishes drawing a shape
 const canvasTracker = document.getElementById('drawingCanvas');
@@ -2908,6 +2758,1033 @@ tourPrevBtn.addEventListener('click', () => {
 tourSkipBtn.addEventListener('click', endTour);
 if (startTourBtn) startTourBtn.addEventListener('click', startTour);
 
+// =========================================================================
+// 19. FAULT ISOLATION MANUAL (FIM) ENGINE - DECOUPLED & VISUAL
+// =========================================================================
+
+let fimLibrary = {};
+let fimState = { activeAirframe: null, activeSystem: null, history: [] };
+
+const airframeSelect = document.getElementById('airframeSelect');
+const systemSelect = document.getElementById('systemSelect');
+const startDiagnosticsBtn = document.getElementById('startDiagnosticsBtn');
+const fimSelectorUI = document.getElementById('fimSelectorUI');
+const fimActiveUI = document.getElementById('fimActiveUI');
+const fimQuitBtn = document.getElementById('fimQuitBtn');
+const fimBackBtn = document.getElementById('fimBackBtn');
+
+// --- A. INITIALIZATION & DATA FETCHING ---
+async function initFimEngine() {
+    try {
+        // 1. Fetch the master database from the external file
+        const response = await fetch('fim_data.json');
+        if (response.ok) {
+            fimLibrary = await response.json();
+        }
+
+        // 2. Merge local custom/imported trees seamlessly
+        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
+        Object.keys(customFimData).forEach(airframeId => {
+            if (!fimLibrary[airframeId]) {
+                fimLibrary[airframeId] = customFimData[airframeId]; // Add new aircraft
+            } else {
+                // Merge systems into existing aircraft
+                Object.assign(fimLibrary[airframeId].systems, customFimData[airframeId].systems);
+            }
+        });
+
+        // 3. Populate the primary Dropdown
+        airframeSelect.innerHTML = '<option value="">-- Choose Airframe / Category --</option>';
+        Object.keys(fimLibrary).forEach(key => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = fimLibrary[key].airframeName;
+            airframeSelect.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error("Failed to load FIM database:", err);
+    }
+}
+
+airframeSelect.addEventListener('change', (e) => {
+    fimState.activeAirframe = e.target.value;
+    systemSelect.innerHTML = '<option value="">-- Choose Procedure --</option>';
+    
+    if (fimState.activeAirframe) {
+        systemSelect.disabled = false;
+        systemSelect.style.opacity = '1';
+        Object.keys(fimLibrary[fimState.activeAirframe].systems).forEach(sysKey => {
+            const opt = document.createElement('option');
+            opt.value = sysKey;
+            opt.textContent = fimLibrary[fimState.activeAirframe].systems[sysKey].systemName;
+            systemSelect.appendChild(opt);
+        });
+    } else {
+        systemSelect.disabled = true;
+        systemSelect.style.opacity = '0.5';
+        startDiagnosticsBtn.disabled = true;
+        startDiagnosticsBtn.style.opacity = '0.5';
+    }
+});
+
+systemSelect.addEventListener('change', (e) => {
+    fimState.activeSystem = e.target.value;
+    const delBtn = document.getElementById('deleteCustomTreeBtn');
+    
+    if (fimState.activeSystem) {
+        startDiagnosticsBtn.disabled = false;
+        startDiagnosticsBtn.style.opacity = '1';
+        
+        if (fimState.activeSystem.includes('custom_')) {
+            delBtn.style.display = 'block';
+        } else {
+            delBtn.style.display = 'none';
+        }
+    } else {
+        delBtn.style.display = 'none';
+    }
+});
+
+// The Delete Button
+document.getElementById('deleteCustomTreeBtn').addEventListener('click', () => {
+    if (confirm("Permanently delete this custom procedure?")) {
+        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
+        
+        delete fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
+        if (customFimData[fimState.activeAirframe] && customFimData[fimState.activeAirframe].systems) {
+            delete customFimData[fimState.activeAirframe].systems[fimState.activeSystem];
+            localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
+        }
+        
+        if (typeof triggerHaptic === 'function') triggerHaptic('medium');
+        initFimEngine();
+        document.getElementById('fimSelectorUI').style.display = 'flex';
+        document.getElementById('deleteCustomTreeBtn').style.display = 'none';
+        startDiagnosticsBtn.disabled = true;
+        startDiagnosticsBtn.style.opacity = '0.5';
+    }
+});
+
+// --- B. RENDER ENGINE (VIEWER) ---
+function renderFimNode(nodeId) {
+    const tree = fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
+    const node = tree.nodes[nodeId];
+    if (!node) return;
+
+    const catText = tree.category ? `${tree.category} | ` : '';
+    document.getElementById('fimActiveSystemLabel').textContent = catText + tree.systemName;
+    
+    document.getElementById('fimNodeTitle').textContent = node.title;
+    document.getElementById('fimNodeText').textContent = node.text;
+
+    const criteriaContainer = document.getElementById('fimNodeCriteriaContainer');
+    if (node.criteria && node.criteria.trim() !== '') {
+        criteriaContainer.style.display = 'block';
+        document.getElementById('fimNodeCriteria').textContent = node.criteria;
+    } else {
+        criteriaContainer.style.display = 'none';
+    }
+    
+    const optionsContainer = document.getElementById('fimOptionsContainer');
+    
+    const notesContainer = document.getElementById('fimNodeNotesContainer');
+    if (node.notes && node.notes.trim() !== '') {
+        notesContainer.style.display = 'block';
+        document.getElementById('fimNodeNotes').textContent = node.notes;
+    } else {
+        notesContainer.style.display = 'none';
+    }
+    
+    
+
+    node.options.forEach(option => {
+        const btn = document.createElement('button');
+        btn.textContent = option.label;
+        btn.style.cssText = 'padding: 15px; background: var(--card-bg); border: 2px solid var(--accent-color); color: var(--text-main); border-radius: var(--radius-md); cursor: pointer; font-size: 1.1rem; text-align: left; transition: all 0.2s ease;';
+        
+        btn.onmouseover = () => btn.style.background = 'rgba(255, 255, 255, 0.05)';
+        btn.onmouseout = () => btn.style.background = 'var(--card-bg)';
+
+        btn.addEventListener('click', () => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('light');
+            fimState.history.push(nodeId);
+            fimBackBtn.style.display = 'block';
+            renderFimNode(option.target);
+        });
+        optionsContainer.appendChild(btn);
+    });
+}
+
+// Viewer Navigation Triggers
+startDiagnosticsBtn.addEventListener('click', () => {
+    fimState.history = []; 
+    fimBackBtn.style.display = 'none';
+    fimSelectorUI.style.display = 'none';
+    fimActiveUI.style.display = 'block';
+    renderFimNode('start');
+});
+
+fimQuitBtn.addEventListener('click', () => {
+    if (confirm("Are you sure you want to quit this diagnostic session?")) {
+        fimActiveUI.style.display = 'none';
+        fimSelectorUI.style.display = 'flex';
+    }
+});
+
+fimBackBtn.addEventListener('click', () => {
+    if (fimState.history.length > 0) {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        const prevNode = fimState.history.pop();
+        if (fimState.history.length === 0) fimBackBtn.style.display = 'none';
+        renderFimNode(prevNode);
+    }
+});
+
+// Boot the Viewer
+initFimEngine();
+
+// --- C. EXPORT & IMPORT ENGINES ---
+const fimExportBtn = document.createElement('button');
+fimExportBtn.textContent = 'Export';
+fimExportBtn.style.cssText = 'background: none; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: var(--radius-sm); padding: 4px 10px; font-weight: bold; cursor: pointer; margin-right: 15px; transition: all 0.2s ease;';
+document.getElementById('fimQuitBtn').insertAdjacentElement('beforebegin', fimExportBtn);
+
+fimExportBtn.addEventListener('click', () => {
+    try {
+        const treeData = fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
+        const exportPackage = { targetAirframeName: fimLibrary[fimState.activeAirframe].airframeName, treeData: treeData };
+        const jsonString = JSON.stringify(exportPackage);
+        const finalString = `FIM-DATA:${btoa(encodeURIComponent(jsonString))}`;
+
+        navigator.clipboard.writeText(finalString).then(() => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('success');
+            const originalText = fimExportBtn.textContent;
+            fimExportBtn.textContent = 'Copied!';
+            fimExportBtn.style.backgroundColor = 'var(--accent-color)';
+            fimExportBtn.style.color = 'white';
+            setTimeout(() => {
+                fimExportBtn.textContent = originalText;
+                fimExportBtn.style.backgroundColor = 'transparent';
+                fimExportBtn.style.color = 'var(--accent-color)';
+            }, 1500);
+        });
+    } catch (e) { alert("Failed to export tree."); }
+});
+
+document.getElementById('importFimBtn').addEventListener('click', () => {
+    const pastedCode = prompt("Paste the FIM Share Code here (Must start with FIM-DATA:):");
+    if (!pastedCode || !pastedCode.startsWith("FIM-DATA:")) return;
+
+    try {
+        const jsonString = decodeURIComponent(atob(pastedCode.replace("FIM-DATA:", "")));
+        const importedPackage = JSON.parse(jsonString);
+
+        const treeToSave = importedPackage.treeData ? importedPackage.treeData : importedPackage;
+        const targetName = importedPackage.targetAirframeName ? importedPackage.targetAirframeName : (treeToSave.makeModel || "Custom Imports");
+        
+        // STANDARD ID NORMALIZATION
+        const airframeId = targetName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
+        
+        if (!customFimData[airframeId]) customFimData[airframeId] = { airframeName: targetName, systems: {} };
+        const uniqueId = "custom_" + Date.now();
+        customFimData[airframeId].systems[uniqueId] = treeToSave;
+
+        localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
+        if (typeof triggerHaptic === 'function') triggerHaptic('success');
+        alert(`Successfully imported: ${treeToSave.systemName}!`);
+        initFimEngine(); 
+    } catch (error) { alert("Failed to import. The code may be corrupted."); }
+});
+
+// --- D. AUTOMATED LOGIC TREE ENGINE ---
+const canvasViewport = document.getElementById('canvasViewport');
+const flowWorkspace = document.getElementById('flowWorkspace');
+const flowNodesContainer = document.getElementById('flowNodesContainer');
+const flowLines = document.getElementById('flowLines');
+
+let treeDraft = {}; 
+let layoutCoordinates = {}; 
+
+function generateNodeId() { return 'node_' + Math.floor(Math.random() * 1000000); }
+
+// UI Triggers
+document.getElementById('enterBuilderBtn').addEventListener('click', () => {
+    document.getElementById('fimSelectorUI').style.display = 'none';
+    document.getElementById('fimBuilderUI').style.display = 'block';
+    document.getElementById('buildPhase1').style.display = 'block';
+    document.getElementById('buildPhase2').style.display = 'none';
+    
+    document.querySelectorAll('.cat-btn').forEach(b => { b.style.background = 'var(--card-bg)'; b.style.color = 'var(--text-main)'; });
+    document.getElementById('buildCategory').value = '';
+    document.getElementById('buildMakeModel').value = '';
+    document.getElementById('buildSystemName').value = '';
+    treeDraft = {};
+    if (typeof initializeXRayEngine === 'function') initializeXRayEngine();
+});
+
+document.getElementById('builderCancelBtn').addEventListener('click', () => {
+    document.getElementById('fimBuilderUI').style.display = 'none';
+    document.getElementById('fimSelectorUI').style.display = 'flex';
+});
+
+document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        document.querySelectorAll('.cat-btn').forEach(b => { b.style.background = 'var(--card-bg)'; b.style.color = 'var(--text-main)'; });
+        e.target.style.background = 'var(--accent-color)';
+        e.target.style.color = 'white';
+        document.getElementById('buildCategory').value = e.target.getAttribute('data-cat');
+    });
+});
+
+const makeInput = document.getElementById('buildMakeModel');
+const makeDropdown = document.getElementById('makeModelDropdown');
+makeInput.addEventListener('focus', () => {
+    makeDropdown.innerHTML = '';
+    Object.keys(fimLibrary).forEach(key => {
+        const div = document.createElement('div');
+        div.textContent = fimLibrary[key].airframeName;
+        div.style.cssText = 'padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;';
+        div.addEventListener('click', () => {
+            makeInput.value = fimLibrary[key].airframeName;
+            makeDropdown.style.display = 'none';
+        });
+        makeDropdown.appendChild(div);
+    });
+    if (makeDropdown.children.length > 0) makeDropdown.style.display = 'block';
+});
+document.addEventListener('click', (e) => { if (e.target !== makeInput) makeDropdown.style.display = 'none'; });
+
+// Phase 1 -> Phase 2 Transition (Ignite Canvas)
+document.getElementById('builderStartCanvasBtn').addEventListener('click', () => {
+    const cat = document.getElementById('buildCategory').value;
+    const make = document.getElementById('buildMakeModel').value.trim();
+    const sys = document.getElementById('buildSystemName').value.trim();
+
+    if (!cat || !make || !sys) { alert("Please complete Steps 1, 2, and 3."); return; }
+
+    document.getElementById('buildPhase1').style.display = 'none';
+    document.getElementById('buildPhase2').style.display = 'block';
+
+    // Seed the Start Node
+    treeDraft = { start: { title: "Start", text: "", criteria: "", options: [] } };
+    
+    renderTree();
+    centerCamera();
+});
+
+document.getElementById('builderBackTo1Btn').addEventListener('click', () => {
+    document.getElementById('buildPhase2').style.display = 'none';
+    document.getElementById('buildPhase1').style.display = 'block';
+});
+
+document.getElementById('recenterCameraBtn').addEventListener('click', centerCamera);
+
+function centerCamera() {
+    // Centers the camera dynamically on the bottom-most Start Node
+    setTimeout(() => {
+        canvasViewport.scrollTo({ left: 2000 - (canvasViewport.clientWidth / 2), top: 3800 - canvasViewport.clientHeight, behavior: 'smooth' });
+    }, 50);
+}
+
+// --- THE MATHEMATICAL AUTO-LAYOUT ENGINE ---
+function cleanUnreachableNodes() {
+    let reachable = new Set(['start']);
+    let queue = ['start'];
+    
+    while(queue.length > 0) {
+        let curr = queue.shift();
+        if(treeDraft[curr]) {
+            treeDraft[curr].options.forEach(o => {
+                if(o.target && o.target !== 'start_loop' && !reachable.has(o.target)) {
+                    reachable.add(o.target);
+                    queue.push(o.target);
+                }
+            });
+        }
+    }
+    
+    // Prune dead branches
+    Object.keys(treeDraft).forEach(k => {
+        if(!reachable.has(k)) delete treeDraft[k];
+    });
+}
+
+function calculateTreeLayout() {
+    let visitedForWidth = new Set();
+    
+    // 1. Calculate how much horizontal space each branch needs (Bottom-Up)
+    function calcWidth(nId) {
+        if (visitedForWidth.has(nId) || !treeDraft[nId]) return 150; // Existing loops take minimal width
+        visitedForWidth.add(nId);
+        
+        let w = 0;
+        treeDraft[nId].options.forEach(opt => {
+            if (opt.target && opt.target !== 'start_loop') {
+                w += calcWidth(opt.target);
+            } else {
+                w += 300; // Dead ends take up standard column width
+            }
+        });
+        w += 150; // The persistent green + box needs space too!
+        
+        treeDraft[nId].treeWidth = Math.max(350, w); // Minimum safe width for a node
+        return treeDraft[nId].treeWidth;
+    }
+
+    calcWidth('start');
+    layoutCoordinates = {};
+
+    // 2. Assign exact X/Y coordinates to place them perfectly (Top-Down execution)
+    function assignPositions(nId, xCenter, y) {
+        if(layoutCoordinates[nId] || !treeDraft[nId]) return;
+        
+        layoutCoordinates[nId] = { x: xCenter, y: y };
+        
+        let totalW = treeDraft[nId].treeWidth;
+        let currentX = xCenter - (totalW / 2); // Start drawing from the far left of the allotted width
+
+        treeDraft[nId].options.forEach(opt => {
+            let childW = 300;
+            if (opt.target && opt.target !== 'start_loop' && treeDraft[opt.target]) {
+                childW = treeDraft[opt.target].treeWidth || 300;
+            }
+            
+            opt.childX = currentX + (childW / 2);
+            opt.childY = y - 400; // Pushes UP the screen 400px per tier
+            
+            // Recurse into the child
+            assignPositions(opt.target, opt.childX, opt.childY);
+            
+            currentX += childW;
+        });
+
+        // The exact coordinates for the Green + Box for this specific node
+        treeDraft[nId].plusX = currentX + 75; 
+        treeDraft[nId].plusY = y - 400;
+    }
+
+    // Root starts perfectly in the lower middle of the 4000x4000 grid
+    assignPositions('start', 2000, 3600);
+}
+
+// --- THE RENDER ENGINE ---
+function renderTree() {
+    cleanUnreachableNodes();
+    calculateTreeLayout();
+
+    flowNodesContainer.innerHTML = '';
+    flowLines.innerHTML = `<defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="var(--text-main)" /></marker>
+        <marker id="arrowheadPlus" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" /></marker>
+    </defs>`;
+
+    // Prepare dropdown options globally
+    let dropdownHtml = `<option value="start_loop" style="color: var(--text-muted);">↻ End Procedure</option>`;
+    Object.keys(treeDraft).forEach(key => {
+        const title = treeDraft[key].title || "Untitled";
+        const shortTitle = title.length > 22 ? title.substring(0, 22) + "..." : title;
+        const prefix = key === 'start' ? '⭐ ' : '↩ ';
+        dropdownHtml += `<option value="${key}">${prefix}${shortTitle}</option>`;
+    });
+
+    Object.keys(treeDraft).forEach(nodeId => {
+        const node = treeDraft[nodeId];
+        const coords = layoutCoordinates[nodeId];
+        if (!coords) return;
+
+        // 1. Draw the Physical Node Card (Fixed 250px height for perfect alignments)
+        const card = document.createElement('div');
+        card.style.cssText = `
+            position: absolute; left: ${coords.x}px; top: ${coords.y}px;
+            transform: translateX(-50%); width: 280px; height: 260px;
+            background: var(--card-bg); border-radius: 8px;
+            border: 3px solid ${nodeId === 'start' ? 'var(--primary-color)' : 'var(--accent-color)'};
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 5;
+            display: flex; flex-direction: column;
+        `;
+        
+        card.innerHTML = `
+            <div style="background: ${nodeId === 'start' ? 'var(--primary-color)' : 'var(--accent-color)'}; color: white; padding: 8px 12px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; border-radius: 4px 4px 0 0;">
+                ${nodeId === 'start' ? 'Start Node' : 'Step Node'}
+            </div>
+            <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
+                <input type="text" class="node-title" placeholder="Action (e.g., Turn on Master)" value="${node.title}" style="padding: 8px; font-weight: bold; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">
+                <textarea class="node-text" placeholder="Additional instructions..." style="flex: 1; resize: none; padding: 8px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">${node.text}</textarea>
+                <input type="text" class="node-criteria" placeholder="Criteria (e.g., Did lights turn on?)" value="${node.criteria || ''}" style="padding: 8px; font-size: 0.85rem; border: 1px dashed var(--accent-color); border-radius: 4px; background: rgba(14,165,233,0.05);">
+            </div>
+        `;
+        
+        // Fast Live-Update without full re-render
+        card.querySelector('.node-title').addEventListener('input', e => { 
+            node.title = e.target.value; 
+            document.querySelectorAll('.opt-target').forEach(select => {
+                const currentVal = select.value;
+                select.innerHTML = dropdownHtml.replace(`value="${nodeId}">`, `value="${nodeId}">${nodeId === 'start' ? '⭐ ' : '↩ '}${e.target.value}`);
+                select.value = currentVal;
+            });
+        });
+        card.querySelector('.node-text').addEventListener('input', e => node.text = e.target.value);
+        card.querySelector('.node-criteria').addEventListener('input', e => node.criteria = e.target.value);
+
+        flowNodesContainer.appendChild(card);
+
+        // 2. Draw Options & Connective Midpoint Boxes
+        node.options.forEach((opt, idx) => {
+            let targetX = opt.childX, targetY = opt.childY;
+            if (opt.target && layoutCoordinates[opt.target]) {
+                targetX = layoutCoordinates[opt.target].x;
+                targetY = layoutCoordinates[opt.target].y;
+            }
+
+            // Draw Upward Bezier Curve SVG Line
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            // Curve starts at Top-Center of Parent (y), ends at Bottom-Center of Target (y + 260px)
+            const curve = `M ${coords.x} ${coords.y} C ${coords.x} ${coords.y - 150}, ${targetX} ${targetY + 260 + 150}, ${targetX} ${targetY + 260}`;
+            path.setAttribute('d', curve);
+            path.setAttribute('stroke', 'var(--text-main)');
+            path.setAttribute('stroke-width', '3');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('marker-end', 'url(#arrowhead)');
+            flowLines.appendChild(path);
+
+            // Draw Interactive Midpoint Box
+            const midX = (coords.x + targetX) / 2;
+            const midY = (coords.y + targetY + 260) / 2;
+
+            const midBox = document.createElement('div');
+            midBox.style.cssText = `
+                position: absolute; left: ${midX}px; top: ${midY}px; transform: translate(-50%, -50%);
+                display: flex; flex-direction: column; gap: 4px; background: var(--card-bg); padding: 8px;
+                border-radius: 6px; border: 2px solid var(--border-color); z-index: 10;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 160px;
+            `;
+            
+            midBox.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase;">Condition:</span>
+                    <button class="delete-opt" style="background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; line-height: 1;">&times;</button>
+                </div>
+                <input type="text" class="opt-label" placeholder="e.g. Yes" value="${opt.label}" style="width: 100%; padding: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 4px; font-weight: bold; text-align: center;">
+                <select class="opt-target" style="width: 100%; padding: 6px; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">
+                    ${dropdownHtml}
+                </select>
+            `;
+
+            midBox.querySelector('.opt-target').value = opt.target || 'start_loop';
+            midBox.querySelector('.opt-label').addEventListener('input', e => opt.label = e.target.value);
+            midBox.querySelector('.opt-target').addEventListener('change', e => {
+                opt.target = e.target.value;
+                renderTree(); // Mathematically rebuilds the entire tree instantly to account for new routing
+            });
+            midBox.querySelector('.delete-opt').addEventListener('click', () => {
+                if (confirm("Delete this logic branch?")) {
+                    node.options.splice(idx, 1);
+                    renderTree();
+                }
+            });
+
+            flowNodesContainer.appendChild(midBox);
+        });
+
+        // 3. Draw the Green "Add Option" Box (Exactly as sketched!)
+        const plusPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const pCurve = `M ${coords.x} ${coords.y} C ${coords.x} ${coords.y - 120}, ${node.plusX} ${node.plusY + 60 + 120}, ${node.plusX} ${node.plusY + 60}`;
+        plusPath.setAttribute('d', pCurve);
+        plusPath.setAttribute('stroke', '#22c55e');
+        plusPath.setAttribute('stroke-width', '2');
+        plusPath.setAttribute('stroke-dasharray', '5,5');
+        plusPath.setAttribute('fill', 'none');
+        plusPath.setAttribute('marker-end', 'url(#arrowheadPlus)');
+        flowLines.appendChild(plusPath);
+
+        const plusBox = document.createElement('div');
+        plusBox.style.cssText = `
+            position: absolute; left: ${node.plusX}px; top: ${node.plusY}px; transform: translate(-50%, -100%);
+            width: 70px; height: 70px; background: rgba(34, 197, 94, 0.05); border: 2px dashed #22c55e;
+            border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 5; transition: background 0.2s, transform 0.2s;
+        `;
+        plusBox.innerHTML = `
+            <span style="font-size: 2rem; font-weight: bold; color: #22c55e; line-height: 1;">+</span>
+            <span style="font-size: 0.6rem; color: #166534; text-align: center; margin-top: 2px; font-weight: bold;">Option</span>
+        `;
+
+        plusBox.addEventListener('mouseover', () => { plusBox.style.background = 'rgba(34, 197, 94, 0.15)'; plusBox.style.transform = 'translate(-50%, -100%) scale(1.05)'; });
+        plusBox.addEventListener('mouseout', () => { plusBox.style.background = 'rgba(34, 197, 94, 0.05)'; plusBox.style.transform = 'translate(-50%, -100%) scale(1)'; });
+
+        plusBox.addEventListener('click', () => {
+            const newId = 'node_' + Math.floor(Math.random() * 100000);
+            treeDraft[newId] = { title: "New Step", text: "", criteria: "", options: [] };
+            node.options.push({ label: "Option " + (node.options.length + 1), target: newId });
+            
+            renderTree();
+            
+            // Silky smooth pan to the newly created branch
+            setTimeout(() => {
+                const cx = layoutCoordinates[newId].x - (canvasViewport.clientWidth / 2);
+                const cy = layoutCoordinates[newId].y - (canvasViewport.clientHeight / 2);
+                canvasViewport.scrollTo({ left: cx, top: cy, behavior: 'smooth' });
+            }, 50);
+        });
+
+        flowNodesContainer.appendChild(plusBox);
+    });
+}
+
+// --- CANVAS PANNING CONTROLS ---
+let isPanning = false;
+let startPanX, startPanY, startScrollLeft, startScrollTop;
+
+canvasViewport.addEventListener('mousedown', (e) => {
+    // Only pan if clicking the empty background or an SVG line
+    if (e.target === canvasViewport || e.target === flowNodesContainer || e.target.tagName === 'svg') {
+        isPanning = true;
+        canvasViewport.style.cursor = 'grabbing';
+        startPanX = e.pageX;
+        startPanY = e.pageY;
+        startScrollLeft = canvasViewport.scrollLeft;
+        startScrollTop = canvasViewport.scrollTop;
+    }
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    e.preventDefault();
+    const walkX = (e.pageX - startPanX) * 1.5;
+    const walkY = (e.pageY - startPanY) * 1.5;
+    canvasViewport.scrollLeft = startScrollLeft - walkX;
+    canvasViewport.scrollTop = startScrollTop - walkY;
+});
+
+document.addEventListener('mouseup', () => {
+    isPanning = false;
+    canvasViewport.style.cursor = 'grab';
+});
+
+// Final Save Execution!
+document.getElementById('builderFinishBtn').addEventListener('click', () => {
+    const makeModel = document.getElementById('buildMakeModel').value.trim();
+    const airframeId = makeModel.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    
+    // Scrub the temporary UI coordinates to keep the JSON file lightweight
+    const cleanTree = JSON.parse(JSON.stringify(treeDraft));
+    Object.values(cleanTree).forEach(n => { delete n.treeWidth; delete n.plusX; delete n.plusY; });
+
+    const finalTree = {
+        category: document.getElementById('buildCategory').value,
+        makeModel: makeModel,
+        systemName: document.getElementById('buildSystemName').value.trim(),
+        nodes: cleanTree
+    };
+
+    const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
+    if (!customFimData[airframeId]) customFimData[airframeId] = { airframeName: makeModel, systems: {} };
+    
+    const uniqueId = "custom_" + Date.now();
+    customFimData[airframeId].systems[uniqueId] = finalTree;
+    
+    localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
+    if (typeof triggerHaptic === 'function') triggerHaptic('success');
+    
+    document.getElementById('fimBuilderUI').style.display = 'none';
+    document.getElementById('fimSelectorUI').style.display = 'flex';
+    initFimEngine(); 
+});
+
+// =========================================================================
+// 20. 14 CFR EXPLORER (INDEXED-DB ENGINE)
+// =========================================================================
+
+const DB_NAME = "AviationProDB";
+const STORE_NAME = "cfr_library";
+let cfrDb;
+
+const cfrSearchInput = document.getElementById('cfrSearchInput');
+const cfrResultsContainer = document.getElementById('cfrResultsContainer');
+const cfrFilterBtns = document.querySelectorAll('.cfr-filter-btn');
+const cfrStatusText = document.getElementById('cfrStatusText');
+const cfrSyncBtn = document.getElementById('cfrSyncBtn');
+
+// 1. Initialize the IndexedDB
+function initCfrDatabase() {
+    const request = indexedDB.open(DB_NAME, 1);
+
+    request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        // Create the object store if it doesn't exist. We use an auto-incrementing ID for speed.
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+            store.createIndex("part", "part", { unique: false }); // Index by Part for fast filtering
+        }
+    };
+
+    request.onsuccess = (event) => {
+        cfrDb = event.target.result;
+        checkDbStatus();
+    };
+
+    request.onerror = (event) => {
+        console.error("IndexedDB Error:", event.target.error);
+        cfrStatusText.textContent = "Error accessing offline storage.";
+        cfrStatusText.style.color = "#ef4444";
+    };
+}
+
+// 2. Check if we have data, or if we need to download it
+function checkDbStatus() {
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const countRequest = store.count();
+
+    countRequest.onsuccess = () => {
+        const statusBlock = document.getElementById('cfrDbStatus');
+        
+        if (countRequest.result > 0) {
+            // A. Repaint the status bar green
+            cfrStatusText.textContent = `Library Ready (${countRequest.result} Regulations Offline)`;
+            cfrStatusText.style.color = "var(--success-text)";
+            statusBlock.style.borderColor = "var(--success-text)";
+            statusBlock.style.background = "rgba(34, 197, 94, 0.1)";
+            cfrSearchInput.disabled = false;
+            
+            // B. Re-enable the update button action
+            cfrSyncBtn.style.display = "block";
+            cfrSyncBtn.textContent = "Update Library";
+            cfrSyncBtn.style.background = "transparent";
+            cfrSyncBtn.style.color = "var(--success-text)";
+            cfrSyncBtn.style.border = "1px solid var(--success-text)";
+            
+            // Pre-load the first few results visually
+            searchCFR('');
+
+            // C. NEW: Auto-dismiss the green box after 3 seconds
+            setTimeout(() => {
+                statusBlock.style.opacity = "0";
+                statusBlock.style.maxHeight = "0px";
+                statusBlock.style.padding = "0px";
+                statusBlock.style.marginBottom = "0px";
+                statusBlock.style.border = "none";
+            }, 3000);
+
+        } else {
+            // Reset visibility if the database is completely empty
+            statusBlock.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: rgba(14, 165, 233, 0.1); border: 1px solid var(--accent-color); padding: 10px; border-radius: var(--radius-sm); margin-bottom: 15px; transition: all 0.4s ease; max-height: 100px; opacity: 1; overflow: hidden;";
+            cfrStatusText.textContent = "Offline library missing. (Requires Wi-Fi)";
+            cfrStatusText.style.color = "var(--accent-color)";
+            
+            cfrSyncBtn.style.display = "block";
+            cfrSyncBtn.textContent = "Download Library";
+            cfrSyncBtn.style.background = "var(--accent-color)";
+            cfrSyncBtn.style.color = "white";
+            cfrSyncBtn.style.border = "none";
+        }
+    };
+}
+
+// 3. The Fetch & Inject Engine
+cfrSyncBtn.addEventListener('click', async () => {
+    cfrSyncBtn.style.display = "none";
+    cfrStatusText.textContent = "Downloading CFR database... Do not close app.";
+    cfrStatusText.style.color = "var(--text-main)";
+    cfrStatusText.parentElement.style.borderColor = "var(--border-color)";
+    cfrStatusText.parentElement.style.background = "var(--bg-color)";
+    
+    try {
+        const response = await fetch('cfr_data.json');
+        if (!response.ok) throw new Error("File not found");
+        
+        const data = await response.json();
+        
+        cfrStatusText.textContent = "Installing to offline vault... Please wait.";
+        
+        const transaction = cfrDb.transaction(STORE_NAME, "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        
+        // WIPE the old database completely before injecting the new one
+        store.clear();
+        
+        // Loop through the massive JSON and inject it into IndexedDB
+        data.forEach(item => store.put(item));
+
+        transaction.oncomplete = () => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('success');
+            checkDbStatus();
+        };
+
+        transaction.onerror = (e) => {
+            throw new Error(e.target.error);
+        };
+
+    } catch (err) {
+        console.error(err);
+        cfrStatusText.textContent = "Download failed. Check connection.";
+        cfrStatusText.style.color = "#ef4444";
+        cfrSyncBtn.style.display = "block";
+        cfrSyncBtn.textContent = "Retry";
+    }
+});
+
+// --- 4. HIERARCHICAL ROUTING ENGINE (DRILL-DOWN) ---
+const cfrNavHeader = document.getElementById('cfrNavHeader');
+const cfrBackBtn = document.getElementById('cfrBackBtn');
+const cfrCurrentFolder = document.getElementById('cfrCurrentFolder');
+
+const partMetadata = {
+    "1": { title: "Definitions and Abbreviations", desc: "General definitions and abbreviations used throughout Title 14." },
+    "21": { title: "Certification Procedures for Products and Articles", desc: "Rules for issuing type certificates, production certificates, and airworthiness certificates." },
+    "23": { title: "Airworthiness Standards: Normal Category Airplanes", desc: "Design and airworthiness standards for normal, utility, acrobatic, and commuter category airplanes." },
+    "25": { title: "Airworthiness Standards: Transport Category Airplanes", desc: "Design and airworthiness standards for large, multi-engine transport airplanes." },
+    "27": { title: "Airworthiness Standards: Normal Category Rotorcraft", desc: "Standards for normal category helicopters." },
+    "29": { title: "Airworthiness Standards: Transport Category Rotorcraft", desc: "Standards for large, multi-engine transport helicopters." },
+    "33": { title: "Airworthiness Standards: Aircraft Engines", desc: "Design and testing standards for aircraft engines." },
+    "35": { title: "Airworthiness Standards: Propellers", desc: "Design and testing standards for aircraft propellers." },
+    "39": { title: "Airworthiness Directives", desc: "Legally enforceable rules issued by the FAA to correct an unsafe condition in a product." },
+    "43": { title: "Maintenance, Preventive Maintenance, Rebuilding, and Alteration", desc: "The core rulebook for A&P mechanics. Dictates who can perform maintenance and the standards it must meet." },
+    "45": { title: "Identification and Registration Marking", desc: "Rules for painting N-numbers and attaching data plates to aircraft and components." },
+    "47": { title: "Aircraft Registration", desc: "Requirements for registering aircraft with the FAA." },
+    "61": { title: "Certification: Pilots, Flight Instructors, and Ground Instructors", desc: "Rules for pilot certification and ratings." },
+    "65": { title: "Certification: Airmen Other Than Flight Crewmembers", desc: "Certification rules for Mechanics (A&P) and Repairmen. Defines eligibility, privileges, and limitations." },
+    "91": { title: "General Operating and Flight Rules", desc: "The primary flight rules for all aircraft operating in the US. Includes maintenance required to keep the aircraft airworthy." },
+    "119": { title: "Certification: Air Carriers and Commercial Operators", desc: "General certification requirements for airlines and charter operations." },
+    "121": { title: "Operating Requirements: Domestic, Flag, and Supplemental Operations", desc: "The strict rules governing major scheduled airlines." },
+    "125": { title: "Certification & Operations: Large Airplanes", desc: "Rules for large aircraft not operating under Part 121 or 135." },
+    "135": { title: "Operating Requirements: Commuter and On Demand", desc: "Rules for charter flights, air taxis, and some commuter operations." },
+    "145": { title: "Repair Stations", desc: "Rules for obtaining and maintaining an FAA Part 145 Certified Repair Station certificate." },
+    "147": { title: "Aviation Maintenance Technician Schools", desc: "Rules governing A&P schools, including curriculum and facility requirements." }
+};
+
+let currentCfrView = 'home'; 
+let activeCfrPart = null;
+
+// Level 1: The "Folder" View
+function renderCfrHome() {
+    currentCfrView = 'home';
+    activeCfrPart = null;
+    if (cfrNavHeader) cfrNavHeader.style.display = 'none';
+    cfrResultsContainer.innerHTML = '';
+
+    Object.keys(partMetadata).forEach(partNum => {
+        const meta = partMetadata[partNum];
+        const div = document.createElement('div');
+        div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; border-left: 4px solid var(--primary-color);';
+        
+        div.onmouseover = () => { div.style.transform = 'translateY(-2px)'; div.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
+        div.onmouseout = () => { div.style.transform = 'translateY(0)'; div.style.boxShadow = 'none'; };
+
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: bold; color: var(--primary-color); font-size: 1.2rem;">Part ${partNum}</span>
+                <span style="font-size: 1.4rem; opacity: 0.8;">📂</span>
+            </div>
+            <h4 style="color: var(--text-main); margin-bottom: 5px; font-size: 1rem;">${meta.title}</h4>
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0;">${meta.desc}</p>
+        `;
+        
+        div.addEventListener('click', () => {
+            if (typeof triggerHaptic === 'function') triggerHaptic('light');
+            cfrSearchInput.value = ''; // Clear search bar before drilling down
+            renderCfrPart(partNum);
+        });
+        
+        cfrResultsContainer.appendChild(div);
+    });
+}
+
+// Level 2: The "File" View
+function renderCfrPart(partNum) {
+    currentCfrView = 'part';
+    activeCfrPart = partNum;
+    
+    if (cfrNavHeader) {
+        cfrNavHeader.style.display = 'flex';
+        cfrCurrentFolder.textContent = `📁 Part ${partNum}`;
+    }
+    
+    cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Loading sections...</p>';
+
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll(); 
+
+    request.onsuccess = () => {
+        cfrResultsContainer.innerHTML = '';
+        const allData = request.result;
+        
+        const matches = allData.filter(item => item.part === partNum);
+
+        matches.sort((a, b) => {
+            const numA = parseFloat(a.section) || 0;
+            const numB = parseFloat(b.section) || 0;
+            return numA - numB;
+        });
+
+        if (matches.length === 0) {
+            cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">No sections found. Please update library.</p>';
+            return;
+        }
+
+        matches.forEach(item => {
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px 15px; border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;';
+            
+            div.onmouseover = () => { div.style.transform = 'translateX(4px)'; div.style.borderColor = 'var(--accent-color)'; };
+            div.onmouseout = () => { div.style.transform = 'translateX(0)'; div.style.borderColor = 'var(--border-color)'; };
+
+            const snippet = item.text.length > 90 ? item.text.substring(0, 90) + '...' : item.text;
+
+            div.innerHTML = `
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                    <span style="font-weight: bold; color: var(--accent-color); font-size: 1.05rem; white-space: nowrap; min-width: 65px;">§ ${item.section}</span>
+                    <div style="flex-grow: 1;">
+                        <h4 style="color: var(--text-main); margin: 0 0 3px 0; font-size: 0.95rem;">${item.title}</h4>
+                        <p style="color: var(--text-muted); font-size: 0.8rem; line-height: 1.3; margin: 0;">${snippet}</p>
+                    </div>
+                </div>
+            `;
+            
+            div.addEventListener('click', () => openCfrModal(item));
+            cfrResultsContainer.appendChild(div);
+        });
+    };
+}
+
+// Active Search: Bypasses hierarchy
+function searchCFR(query) {
+    if (!cfrDb) return;
+    const q = query.toLowerCase().trim();
+    
+    if (q === '') {
+        if (currentCfrView === 'part' && activeCfrPart) renderCfrPart(activeCfrPart);
+        else renderCfrHome();
+        return;
+    }
+
+    if (cfrNavHeader) {
+        cfrNavHeader.style.display = 'flex';
+        cfrCurrentFolder.textContent = `🔍 Search Results`;
+    }
+    
+    cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Searching...</p>';
+
+    const transaction = cfrDb.transaction(STORE_NAME, "readonly");
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll(); 
+
+    request.onsuccess = () => {
+        const allData = request.result;
+        
+        const matches = allData.filter(item => {
+            return item.section.toLowerCase().includes(q) || 
+                   item.title.toLowerCase().includes(q) || 
+                   item.text.toLowerCase().includes(q) ||
+                   (`part ${item.part}` === q); 
+        });
+
+        cfrResultsContainer.innerHTML = '';
+
+        if (matches.length === 0) {
+            cfrResultsContainer.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">No regulations found.</p>';
+            return;
+        }
+
+        const renderLimit = Math.min(matches.length, 50);
+        for (let i = 0; i < renderLimit; i++) {
+            const item = matches[i];
+            const div = document.createElement('div');
+            div.style.cssText = 'background: var(--card-bg); border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;';
+            
+            div.onmouseover = () => { div.style.transform = 'translateY(-2px)'; div.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
+            div.onmouseout = () => { div.style.transform = 'translateY(0)'; div.style.boxShadow = 'none'; };
+
+            const snippet = item.text.length > 120 ? item.text.substring(0, 120) + '...' : item.text;
+
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">§ ${item.section}</span>
+                    <span style="font-size: 0.75rem; background: rgba(14, 165, 233, 0.1); color: var(--accent-color); padding: 3px 8px; border-radius: 12px; font-weight: bold;">Part ${item.part}</span>
+                </div>
+                <h4 style="color: var(--text-main); margin-bottom: 8px; font-size: 0.95rem;">${item.title}</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">${snippet}</p>
+            `;
+            
+            div.addEventListener('click', () => openCfrModal(item));
+            cfrResultsContainer.appendChild(div);
+        }
+    };
+}
+
+// --- 5. CFR MODAL DETAIL ENGINE & LEGAL FORMATTER ---
+const cfrDetailModal = document.getElementById('cfrDetailModal');
+const cfrDetailBadge = document.getElementById('cfrDetailBadge');
+const cfrDetailSection = document.getElementById('cfrDetailSection');
+const cfrDetailTitle = document.getElementById('cfrDetailTitle');
+const cfrDetailText = document.getElementById('cfrDetailText');
+const closeCfrModalBtn = document.getElementById('closeCfrModalBtn');
+
+function openCfrModal(item) {
+    if (typeof triggerHaptic === 'function') triggerHaptic('light');
+    
+    cfrDetailBadge.textContent = `Part ${item.part}`;
+    cfrDetailSection.textContent = `§ ${item.section}`;
+    cfrDetailTitle.textContent = item.title;
+    
+    const paragraphs = item.text.split('\n\n');
+    let formattedHtml = '';
+    
+    paragraphs.forEach(p => {
+        let styledP = p.replace(/^(\([a-zA-Z0-9]{1,3}\))\s*/, '<strong style="color: var(--accent-color); font-size: 1.1rem; margin-right: 6px;">$1</strong>');
+        formattedHtml += `<p style="margin-bottom: 16px; padding-left: 28px; text-indent: -28px;">${styledP}</p>`;
+    });
+
+    cfrDetailText.innerHTML = formattedHtml;
+    
+    cfrDetailModal.style.display = 'block';
+    document.body.style.overflow = 'hidden'; 
+}
+
+if (closeCfrModalBtn) {
+    closeCfrModalBtn.addEventListener('click', () => {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        cfrDetailModal.style.display = 'none';
+        document.body.style.overflow = ''; 
+    });
+}
+
+window.addEventListener('click', (e) => {
+    if (e.target === cfrDetailModal) {
+        cfrDetailModal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+});
+
+// --- 6. NAVIGATION LISTENERS ---
+if (cfrBackBtn) {
+    cfrBackBtn.addEventListener('click', () => {
+        if (typeof triggerHaptic === 'function') triggerHaptic('light');
+        cfrSearchInput.value = ''; 
+        renderCfrHome(); 
+    });
+}
+
+if (cfrSearchInput) {
+    cfrSearchInput.addEventListener('input', (e) => searchCFR(e.target.value));
+}
+
+// Modify the boot sequence to trigger the Home View
+const originalCheckDbStatus = checkDbStatus;
+checkDbStatus = function() {
+    originalCheckDbStatus();
+    if (cfrSearchInput && !cfrSearchInput.disabled && cfrSearchInput.value.trim() === '') {
+        renderCfrHome();
+    }
+};
+
+// Boot the database when the script loads
+initCfrDatabase();
+
 // --- BOOT & EVENT TRIGGERS ---
 
 // 1. Unpack the vault immediately when the app opens
@@ -2929,18 +3806,11 @@ document.addEventListener('input', (e) => {
 
 // 5. Auto-save when a user clicks any button
 document.addEventListener('click', (e) => {
-    if (e.target.tagName === 'BUTTON' || e.target.classList.contains('color-btn')) {
+    if (e.target.tagName === 'BUTTON') {
         setTimeout(saveOmniVault, 50);
     }
-
-    // 6. Auto-save when a user finishes drawing a shape
-const canvasTracker = document.getElementById('drawingCanvas');
-if (canvasTracker) {
-    canvasTracker.addEventListener('mouseup', saveOmniVault);
-    canvasTracker.addEventListener('touchend', saveOmniVault);
-}
 });
 
-// 7. Paint the Resistor tool on boot
+// 6. Paint the Resistor tool on boot
 setTimeout(calculateResistor, 100);
 
