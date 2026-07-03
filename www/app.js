@@ -345,7 +345,7 @@ qcDec.addEventListener('input', () => {
 // --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
     // Skip the Reference Library and the FIM Engine
-    if (card.id === 'module-ref' || card.id === 'module-fim') return;
+    if (card.id === 'module-ref' || card.id === 'module-fim'|| card.id === 'module-cfr') return;
 
     const header = card.querySelector('h2');
     if (!header) return;
