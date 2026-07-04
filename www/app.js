@@ -108,66 +108,8 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 // =========================================================================
-// 1.6 QUALITY OF LIFE TOOLS (Wake Lock, Glove Mode, Drawer)
+// 1.6 QUALITY OF LIFE TOOLS 
 // =========================================================================
-
-// --- Wake Lock (Always Awake) ---
-let wakeLock = null;
-const wakeToggleBtn = document.getElementById('wakeToggleBtn');
-
-async function requestWakeLock() {
-    try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        wakeToggleBtn.style.color = '#fbbf24'; // Illuminates yellow
-        wakeToggleBtn.style.textShadow = '0 0 10px rgba(251, 191, 36, 0.5)';
-        triggerHaptic('light');
-    } catch (err) { console.log('Wake Lock denied by OS.'); }
-}
-
-wakeToggleBtn.addEventListener('click', () => {
-    if (wakeLock !== null) {
-        wakeLock.release().then(() => {
-            wakeLock = null;
-            wakeToggleBtn.style.color = 'rgba(255,255,255,0.5)';
-            wakeToggleBtn.style.textShadow = 'none';
-            triggerHaptic('light');
-        });
-    } else {
-        requestWakeLock();
-    }
-});
-
-// Auto-reacquire lock if you minimize the app and open it back up
-document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-        wakeLock = await navigator.wakeLock.request('screen');
-    }
-});
-
-// --- Glove Mode Expansion ---
-const gloveToggleBtn = document.getElementById('gloveToggleBtn');
-const isGloveMode = localStorage.getItem('gloveMode') === 'true';
-
-if (isGloveMode) {
-    document.body.classList.add('glove-mode');
-    gloveToggleBtn.style.filter = 'none';
-    gloveToggleBtn.style.opacity = '1';
-}
-
-gloveToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('glove-mode');
-    triggerHaptic('medium');
-    
-    if (document.body.classList.contains('glove-mode')) {
-        localStorage.setItem('gloveMode', 'true');
-        gloveToggleBtn.style.filter = 'none';
-        gloveToggleBtn.style.opacity = '1';
-    } else {
-        localStorage.setItem('gloveMode', 'false');
-        gloveToggleBtn.style.filter = 'grayscale(100%)';
-        gloveToggleBtn.style.opacity = '0.6';
-    }
-});
 
 // --- Global Drawers (Tools & Notes) ---
 const quickDrawer = document.getElementById('quickDrawer');
@@ -342,10 +284,11 @@ qcDec.addEventListener('input', () => {
         qcFrac.value = `${num}/${den}`;
     }
 });
+
 // --- UNIVERSAL MODULE RESET ---
 document.querySelectorAll('.calc-card').forEach(card => {
     // Skip the Reference Library and the FIM Engine
-    if (card.id === 'module-ref' || card.id === 'module-fim'|| card.id === 'module-cfr') return;
+    if (card.id === 'module-ref' || card.id === 'module-fim'|| card.id === 'module-cfr'|| card.id === 'module-manuals') return;
 
     const header = card.querySelector('h2');
     if (!header) return;
@@ -2510,16 +2453,6 @@ const tourSteps = [
         text: 'Tap this magnifying glass to instantly search and jump to any tool, formula, or calculator across the entire app.'
     },
     {
-        target: '#wakeToggleBtn',
-        title: 'Keep Awake',
-        text: 'Turn this on to lock your screen awake indefinitely.'
-    },
-    {
-        target: '#gloveToggleBtn',
-        title: 'Glove Mode',
-        text: 'Turn this on to disable haptics and increase the size of buttons, inputs, and text for gloved hands.'
-    },
-    {
         target: '#themeToggleBtn',
         title: 'Night Mode',
         text: 'Toggle dark mode to reduce screen glare'
@@ -2540,6 +2473,15 @@ const tourSteps = [
         text: 'Access the Fleet Reference Engine. Select your aircraft make, model, and serial number to instantly load and search its specific maintenance manuals.',
         action: () => {
             const btn = document.querySelector('.tabs .tab-btn:nth-child(1)');
+            if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+        }
+    },
+    {
+        target: '.tab-btn[data-target="module-cfr"]', 
+        title: '14 CFR Index',
+        text: 'Search the complete 14 CFR database for regulations and compliance information.',
+        action: () => {
+            const btn = document.querySelector('.tab-btn[data-target="module-wb"]');
             if (btn) { btn.click(); btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
         }
     },
@@ -2630,7 +2572,7 @@ const tourSteps = [
                 </div>
                 <div style="display: flex; gap: 10px; align-items: start;">
                     <span style="font-size: 1.2rem; line-height: 1;">⛓️‍💥</span>
-                    <div style="line-height: 1.3;"><strong>100% Offline:</strong> No internet connection or cellular service required.</div>
+                    <div style="line-height: 1.3;"><strong>100% Offline:</strong> No internet connection or cellular service required after initial setup.</div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: start;">
                     <span style="font-size: 1.2rem; line-height: 1;">🔒</span>
@@ -2758,641 +2700,7 @@ tourPrevBtn.addEventListener('click', () => {
 tourSkipBtn.addEventListener('click', endTour);
 if (startTourBtn) startTourBtn.addEventListener('click', startTour);
 
-// =========================================================================
-// 19. FAULT ISOLATION MANUAL (FIM) ENGINE - DECOUPLED & VISUAL
-// =========================================================================
 
-let fimLibrary = {};
-let fimState = { activeAirframe: null, activeSystem: null, history: [] };
-
-const airframeSelect = document.getElementById('airframeSelect');
-const systemSelect = document.getElementById('systemSelect');
-const startDiagnosticsBtn = document.getElementById('startDiagnosticsBtn');
-const fimSelectorUI = document.getElementById('fimSelectorUI');
-const fimActiveUI = document.getElementById('fimActiveUI');
-const fimQuitBtn = document.getElementById('fimQuitBtn');
-const fimBackBtn = document.getElementById('fimBackBtn');
-
-// --- A. INITIALIZATION & DATA FETCHING ---
-async function initFimEngine() {
-    try {
-        // 1. Fetch the master database from the external file
-        const response = await fetch('fim_data.json');
-        if (response.ok) {
-            fimLibrary = await response.json();
-        }
-
-        // 2. Merge local custom/imported trees seamlessly
-        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
-        Object.keys(customFimData).forEach(airframeId => {
-            if (!fimLibrary[airframeId]) {
-                fimLibrary[airframeId] = customFimData[airframeId]; // Add new aircraft
-            } else {
-                // Merge systems into existing aircraft
-                Object.assign(fimLibrary[airframeId].systems, customFimData[airframeId].systems);
-            }
-        });
-
-        // 3. Populate the primary Dropdown
-        airframeSelect.innerHTML = '<option value="">-- Choose Airframe / Category --</option>';
-        Object.keys(fimLibrary).forEach(key => {
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = fimLibrary[key].airframeName;
-            airframeSelect.appendChild(opt);
-        });
-
-    } catch (err) {
-        console.error("Failed to load FIM database:", err);
-    }
-}
-
-airframeSelect.addEventListener('change', (e) => {
-    fimState.activeAirframe = e.target.value;
-    systemSelect.innerHTML = '<option value="">-- Choose Procedure --</option>';
-    
-    if (fimState.activeAirframe) {
-        systemSelect.disabled = false;
-        systemSelect.style.opacity = '1';
-        Object.keys(fimLibrary[fimState.activeAirframe].systems).forEach(sysKey => {
-            const opt = document.createElement('option');
-            opt.value = sysKey;
-            opt.textContent = fimLibrary[fimState.activeAirframe].systems[sysKey].systemName;
-            systemSelect.appendChild(opt);
-        });
-    } else {
-        systemSelect.disabled = true;
-        systemSelect.style.opacity = '0.5';
-        startDiagnosticsBtn.disabled = true;
-        startDiagnosticsBtn.style.opacity = '0.5';
-    }
-});
-
-systemSelect.addEventListener('change', (e) => {
-    fimState.activeSystem = e.target.value;
-    const delBtn = document.getElementById('deleteCustomTreeBtn');
-    
-    if (fimState.activeSystem) {
-        startDiagnosticsBtn.disabled = false;
-        startDiagnosticsBtn.style.opacity = '1';
-        
-        if (fimState.activeSystem.includes('custom_')) {
-            delBtn.style.display = 'block';
-        } else {
-            delBtn.style.display = 'none';
-        }
-    } else {
-        delBtn.style.display = 'none';
-    }
-});
-
-// The Delete Button
-document.getElementById('deleteCustomTreeBtn').addEventListener('click', () => {
-    if (confirm("Permanently delete this custom procedure?")) {
-        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
-        
-        delete fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
-        if (customFimData[fimState.activeAirframe] && customFimData[fimState.activeAirframe].systems) {
-            delete customFimData[fimState.activeAirframe].systems[fimState.activeSystem];
-            localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
-        }
-        
-        if (typeof triggerHaptic === 'function') triggerHaptic('medium');
-        initFimEngine();
-        document.getElementById('fimSelectorUI').style.display = 'flex';
-        document.getElementById('deleteCustomTreeBtn').style.display = 'none';
-        startDiagnosticsBtn.disabled = true;
-        startDiagnosticsBtn.style.opacity = '0.5';
-    }
-});
-
-// --- B. RENDER ENGINE (VIEWER) ---
-function renderFimNode(nodeId) {
-    const tree = fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
-    const node = tree.nodes[nodeId];
-    if (!node) return;
-
-    const catText = tree.category ? `${tree.category} | ` : '';
-    document.getElementById('fimActiveSystemLabel').textContent = catText + tree.systemName;
-    
-    document.getElementById('fimNodeTitle').textContent = node.title;
-    document.getElementById('fimNodeText').textContent = node.text;
-
-    const criteriaContainer = document.getElementById('fimNodeCriteriaContainer');
-    if (node.criteria && node.criteria.trim() !== '') {
-        criteriaContainer.style.display = 'block';
-        document.getElementById('fimNodeCriteria').textContent = node.criteria;
-    } else {
-        criteriaContainer.style.display = 'none';
-    }
-    
-    const optionsContainer = document.getElementById('fimOptionsContainer');
-    
-    const notesContainer = document.getElementById('fimNodeNotesContainer');
-    if (node.notes && node.notes.trim() !== '') {
-        notesContainer.style.display = 'block';
-        document.getElementById('fimNodeNotes').textContent = node.notes;
-    } else {
-        notesContainer.style.display = 'none';
-    }
-    
-    
-
-    node.options.forEach(option => {
-        const btn = document.createElement('button');
-        btn.textContent = option.label;
-        btn.style.cssText = 'padding: 15px; background: var(--card-bg); border: 2px solid var(--accent-color); color: var(--text-main); border-radius: var(--radius-md); cursor: pointer; font-size: 1.1rem; text-align: left; transition: all 0.2s ease;';
-        
-        btn.onmouseover = () => btn.style.background = 'rgba(255, 255, 255, 0.05)';
-        btn.onmouseout = () => btn.style.background = 'var(--card-bg)';
-
-        btn.addEventListener('click', () => {
-            if (typeof triggerHaptic === 'function') triggerHaptic('light');
-            fimState.history.push(nodeId);
-            fimBackBtn.style.display = 'block';
-            renderFimNode(option.target);
-        });
-        optionsContainer.appendChild(btn);
-    });
-}
-
-// Viewer Navigation Triggers
-startDiagnosticsBtn.addEventListener('click', () => {
-    fimState.history = []; 
-    fimBackBtn.style.display = 'none';
-    fimSelectorUI.style.display = 'none';
-    fimActiveUI.style.display = 'block';
-    renderFimNode('start');
-});
-
-fimQuitBtn.addEventListener('click', () => {
-    if (confirm("Are you sure you want to quit this diagnostic session?")) {
-        fimActiveUI.style.display = 'none';
-        fimSelectorUI.style.display = 'flex';
-    }
-});
-
-fimBackBtn.addEventListener('click', () => {
-    if (fimState.history.length > 0) {
-        if (typeof triggerHaptic === 'function') triggerHaptic('light');
-        const prevNode = fimState.history.pop();
-        if (fimState.history.length === 0) fimBackBtn.style.display = 'none';
-        renderFimNode(prevNode);
-    }
-});
-
-// Boot the Viewer
-initFimEngine();
-
-// --- C. EXPORT & IMPORT ENGINES ---
-const fimExportBtn = document.createElement('button');
-fimExportBtn.textContent = 'Export';
-fimExportBtn.style.cssText = 'background: none; border: 1px solid var(--accent-color); color: var(--accent-color); border-radius: var(--radius-sm); padding: 4px 10px; font-weight: bold; cursor: pointer; margin-right: 15px; transition: all 0.2s ease;';
-document.getElementById('fimQuitBtn').insertAdjacentElement('beforebegin', fimExportBtn);
-
-fimExportBtn.addEventListener('click', () => {
-    try {
-        const treeData = fimLibrary[fimState.activeAirframe].systems[fimState.activeSystem];
-        const exportPackage = { targetAirframeName: fimLibrary[fimState.activeAirframe].airframeName, treeData: treeData };
-        const jsonString = JSON.stringify(exportPackage);
-        const finalString = `FIM-DATA:${btoa(encodeURIComponent(jsonString))}`;
-
-        navigator.clipboard.writeText(finalString).then(() => {
-            if (typeof triggerHaptic === 'function') triggerHaptic('success');
-            const originalText = fimExportBtn.textContent;
-            fimExportBtn.textContent = 'Copied!';
-            fimExportBtn.style.backgroundColor = 'var(--accent-color)';
-            fimExportBtn.style.color = 'white';
-            setTimeout(() => {
-                fimExportBtn.textContent = originalText;
-                fimExportBtn.style.backgroundColor = 'transparent';
-                fimExportBtn.style.color = 'var(--accent-color)';
-            }, 1500);
-        });
-    } catch (e) { alert("Failed to export tree."); }
-});
-
-document.getElementById('importFimBtn').addEventListener('click', () => {
-    const pastedCode = prompt("Paste the FIM Share Code here (Must start with FIM-DATA:):");
-    if (!pastedCode || !pastedCode.startsWith("FIM-DATA:")) return;
-
-    try {
-        const jsonString = decodeURIComponent(atob(pastedCode.replace("FIM-DATA:", "")));
-        const importedPackage = JSON.parse(jsonString);
-
-        const treeToSave = importedPackage.treeData ? importedPackage.treeData : importedPackage;
-        const targetName = importedPackage.targetAirframeName ? importedPackage.targetAirframeName : (treeToSave.makeModel || "Custom Imports");
-        
-        // STANDARD ID NORMALIZATION
-        const airframeId = targetName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-        const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
-        
-        if (!customFimData[airframeId]) customFimData[airframeId] = { airframeName: targetName, systems: {} };
-        const uniqueId = "custom_" + Date.now();
-        customFimData[airframeId].systems[uniqueId] = treeToSave;
-
-        localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
-        if (typeof triggerHaptic === 'function') triggerHaptic('success');
-        alert(`Successfully imported: ${treeToSave.systemName}!`);
-        initFimEngine(); 
-    } catch (error) { alert("Failed to import. The code may be corrupted."); }
-});
-
-// --- D. AUTOMATED LOGIC TREE ENGINE ---
-const canvasViewport = document.getElementById('canvasViewport');
-const flowWorkspace = document.getElementById('flowWorkspace');
-const flowNodesContainer = document.getElementById('flowNodesContainer');
-const flowLines = document.getElementById('flowLines');
-
-let treeDraft = {}; 
-let layoutCoordinates = {}; 
-
-function generateNodeId() { return 'node_' + Math.floor(Math.random() * 1000000); }
-
-// UI Triggers
-document.getElementById('enterBuilderBtn').addEventListener('click', () => {
-    document.getElementById('fimSelectorUI').style.display = 'none';
-    document.getElementById('fimBuilderUI').style.display = 'block';
-    document.getElementById('buildPhase1').style.display = 'block';
-    document.getElementById('buildPhase2').style.display = 'none';
-    
-    document.querySelectorAll('.cat-btn').forEach(b => { b.style.background = 'var(--card-bg)'; b.style.color = 'var(--text-main)'; });
-    document.getElementById('buildCategory').value = '';
-    document.getElementById('buildMakeModel').value = '';
-    document.getElementById('buildSystemName').value = '';
-    treeDraft = {};
-    if (typeof initializeXRayEngine === 'function') initializeXRayEngine();
-});
-
-document.getElementById('builderCancelBtn').addEventListener('click', () => {
-    document.getElementById('fimBuilderUI').style.display = 'none';
-    document.getElementById('fimSelectorUI').style.display = 'flex';
-});
-
-document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        if (typeof triggerHaptic === 'function') triggerHaptic('light');
-        document.querySelectorAll('.cat-btn').forEach(b => { b.style.background = 'var(--card-bg)'; b.style.color = 'var(--text-main)'; });
-        e.target.style.background = 'var(--accent-color)';
-        e.target.style.color = 'white';
-        document.getElementById('buildCategory').value = e.target.getAttribute('data-cat');
-    });
-});
-
-const makeInput = document.getElementById('buildMakeModel');
-const makeDropdown = document.getElementById('makeModelDropdown');
-makeInput.addEventListener('focus', () => {
-    makeDropdown.innerHTML = '';
-    Object.keys(fimLibrary).forEach(key => {
-        const div = document.createElement('div');
-        div.textContent = fimLibrary[key].airframeName;
-        div.style.cssText = 'padding: 10px; border-bottom: 1px solid var(--border-color); cursor: pointer;';
-        div.addEventListener('click', () => {
-            makeInput.value = fimLibrary[key].airframeName;
-            makeDropdown.style.display = 'none';
-        });
-        makeDropdown.appendChild(div);
-    });
-    if (makeDropdown.children.length > 0) makeDropdown.style.display = 'block';
-});
-document.addEventListener('click', (e) => { if (e.target !== makeInput) makeDropdown.style.display = 'none'; });
-
-// Phase 1 -> Phase 2 Transition (Ignite Canvas)
-document.getElementById('builderStartCanvasBtn').addEventListener('click', () => {
-    const cat = document.getElementById('buildCategory').value;
-    const make = document.getElementById('buildMakeModel').value.trim();
-    const sys = document.getElementById('buildSystemName').value.trim();
-
-    if (!cat || !make || !sys) { alert("Please complete Steps 1, 2, and 3."); return; }
-
-    document.getElementById('buildPhase1').style.display = 'none';
-    document.getElementById('buildPhase2').style.display = 'block';
-
-    // Seed the Start Node
-    treeDraft = { start: { title: "Start", text: "", criteria: "", options: [] } };
-    
-    renderTree();
-    centerCamera();
-});
-
-document.getElementById('builderBackTo1Btn').addEventListener('click', () => {
-    document.getElementById('buildPhase2').style.display = 'none';
-    document.getElementById('buildPhase1').style.display = 'block';
-});
-
-document.getElementById('recenterCameraBtn').addEventListener('click', centerCamera);
-
-function centerCamera() {
-    // Centers the camera dynamically on the bottom-most Start Node
-    setTimeout(() => {
-        canvasViewport.scrollTo({ left: 2000 - (canvasViewport.clientWidth / 2), top: 3800 - canvasViewport.clientHeight, behavior: 'smooth' });
-    }, 50);
-}
-
-// --- THE MATHEMATICAL AUTO-LAYOUT ENGINE ---
-function cleanUnreachableNodes() {
-    let reachable = new Set(['start']);
-    let queue = ['start'];
-    
-    while(queue.length > 0) {
-        let curr = queue.shift();
-        if(treeDraft[curr]) {
-            treeDraft[curr].options.forEach(o => {
-                if(o.target && o.target !== 'start_loop' && !reachable.has(o.target)) {
-                    reachable.add(o.target);
-                    queue.push(o.target);
-                }
-            });
-        }
-    }
-    
-    // Prune dead branches
-    Object.keys(treeDraft).forEach(k => {
-        if(!reachable.has(k)) delete treeDraft[k];
-    });
-}
-
-function calculateTreeLayout() {
-    let visitedForWidth = new Set();
-    
-    // 1. Calculate how much horizontal space each branch needs (Bottom-Up)
-    function calcWidth(nId) {
-        if (visitedForWidth.has(nId) || !treeDraft[nId]) return 150; // Existing loops take minimal width
-        visitedForWidth.add(nId);
-        
-        let w = 0;
-        treeDraft[nId].options.forEach(opt => {
-            if (opt.target && opt.target !== 'start_loop') {
-                w += calcWidth(opt.target);
-            } else {
-                w += 300; // Dead ends take up standard column width
-            }
-        });
-        w += 150; // The persistent green + box needs space too!
-        
-        treeDraft[nId].treeWidth = Math.max(350, w); // Minimum safe width for a node
-        return treeDraft[nId].treeWidth;
-    }
-
-    calcWidth('start');
-    layoutCoordinates = {};
-
-    // 2. Assign exact X/Y coordinates to place them perfectly (Top-Down execution)
-    function assignPositions(nId, xCenter, y) {
-        if(layoutCoordinates[nId] || !treeDraft[nId]) return;
-        
-        layoutCoordinates[nId] = { x: xCenter, y: y };
-        
-        let totalW = treeDraft[nId].treeWidth;
-        let currentX = xCenter - (totalW / 2); // Start drawing from the far left of the allotted width
-
-        treeDraft[nId].options.forEach(opt => {
-            let childW = 300;
-            if (opt.target && opt.target !== 'start_loop' && treeDraft[opt.target]) {
-                childW = treeDraft[opt.target].treeWidth || 300;
-            }
-            
-            opt.childX = currentX + (childW / 2);
-            opt.childY = y - 400; // Pushes UP the screen 400px per tier
-            
-            // Recurse into the child
-            assignPositions(opt.target, opt.childX, opt.childY);
-            
-            currentX += childW;
-        });
-
-        // The exact coordinates for the Green + Box for this specific node
-        treeDraft[nId].plusX = currentX + 75; 
-        treeDraft[nId].plusY = y - 400;
-    }
-
-    // Root starts perfectly in the lower middle of the 4000x4000 grid
-    assignPositions('start', 2000, 3600);
-}
-
-// --- THE RENDER ENGINE ---
-function renderTree() {
-    cleanUnreachableNodes();
-    calculateTreeLayout();
-
-    flowNodesContainer.innerHTML = '';
-    flowLines.innerHTML = `<defs>
-        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="var(--text-main)" /></marker>
-        <marker id="arrowheadPlus" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" /></marker>
-    </defs>`;
-
-    // Prepare dropdown options globally
-    let dropdownHtml = `<option value="start_loop" style="color: var(--text-muted);">↻ End Procedure</option>`;
-    Object.keys(treeDraft).forEach(key => {
-        const title = treeDraft[key].title || "Untitled";
-        const shortTitle = title.length > 22 ? title.substring(0, 22) + "..." : title;
-        const prefix = key === 'start' ? '⭐ ' : '↩ ';
-        dropdownHtml += `<option value="${key}">${prefix}${shortTitle}</option>`;
-    });
-
-    Object.keys(treeDraft).forEach(nodeId => {
-        const node = treeDraft[nodeId];
-        const coords = layoutCoordinates[nodeId];
-        if (!coords) return;
-
-        // 1. Draw the Physical Node Card (Fixed 250px height for perfect alignments)
-        const card = document.createElement('div');
-        card.style.cssText = `
-            position: absolute; left: ${coords.x}px; top: ${coords.y}px;
-            transform: translateX(-50%); width: 280px; height: 260px;
-            background: var(--card-bg); border-radius: 8px;
-            border: 3px solid ${nodeId === 'start' ? 'var(--primary-color)' : 'var(--accent-color)'};
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 5;
-            display: flex; flex-direction: column;
-        `;
-        
-        card.innerHTML = `
-            <div style="background: ${nodeId === 'start' ? 'var(--primary-color)' : 'var(--accent-color)'}; color: white; padding: 8px 12px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; border-radius: 4px 4px 0 0;">
-                ${nodeId === 'start' ? 'Start Node' : 'Step Node'}
-            </div>
-            <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1;">
-                <input type="text" class="node-title" placeholder="Action (e.g., Turn on Master)" value="${node.title}" style="padding: 8px; font-weight: bold; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">
-                <textarea class="node-text" placeholder="Additional instructions..." style="flex: 1; resize: none; padding: 8px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">${node.text}</textarea>
-                <input type="text" class="node-criteria" placeholder="Criteria (e.g., Did lights turn on?)" value="${node.criteria || ''}" style="padding: 8px; font-size: 0.85rem; border: 1px dashed var(--accent-color); border-radius: 4px; background: rgba(14,165,233,0.05);">
-            </div>
-        `;
-        
-        // Fast Live-Update without full re-render
-        card.querySelector('.node-title').addEventListener('input', e => { 
-            node.title = e.target.value; 
-            document.querySelectorAll('.opt-target').forEach(select => {
-                const currentVal = select.value;
-                select.innerHTML = dropdownHtml.replace(`value="${nodeId}">`, `value="${nodeId}">${nodeId === 'start' ? '⭐ ' : '↩ '}${e.target.value}`);
-                select.value = currentVal;
-            });
-        });
-        card.querySelector('.node-text').addEventListener('input', e => node.text = e.target.value);
-        card.querySelector('.node-criteria').addEventListener('input', e => node.criteria = e.target.value);
-
-        flowNodesContainer.appendChild(card);
-
-        // 2. Draw Options & Connective Midpoint Boxes
-        node.options.forEach((opt, idx) => {
-            let targetX = opt.childX, targetY = opt.childY;
-            if (opt.target && layoutCoordinates[opt.target]) {
-                targetX = layoutCoordinates[opt.target].x;
-                targetY = layoutCoordinates[opt.target].y;
-            }
-
-            // Draw Upward Bezier Curve SVG Line
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            // Curve starts at Top-Center of Parent (y), ends at Bottom-Center of Target (y + 260px)
-            const curve = `M ${coords.x} ${coords.y} C ${coords.x} ${coords.y - 150}, ${targetX} ${targetY + 260 + 150}, ${targetX} ${targetY + 260}`;
-            path.setAttribute('d', curve);
-            path.setAttribute('stroke', 'var(--text-main)');
-            path.setAttribute('stroke-width', '3');
-            path.setAttribute('fill', 'none');
-            path.setAttribute('marker-end', 'url(#arrowhead)');
-            flowLines.appendChild(path);
-
-            // Draw Interactive Midpoint Box
-            const midX = (coords.x + targetX) / 2;
-            const midY = (coords.y + targetY + 260) / 2;
-
-            const midBox = document.createElement('div');
-            midBox.style.cssText = `
-                position: absolute; left: ${midX}px; top: ${midY}px; transform: translate(-50%, -50%);
-                display: flex; flex-direction: column; gap: 4px; background: var(--card-bg); padding: 8px;
-                border-radius: 6px; border: 2px solid var(--border-color); z-index: 10;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 160px;
-            `;
-            
-            midBox.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase;">Condition:</span>
-                    <button class="delete-opt" style="background: none; border: none; color: #ef4444; font-weight: bold; cursor: pointer; line-height: 1;">&times;</button>
-                </div>
-                <input type="text" class="opt-label" placeholder="e.g. Yes" value="${opt.label}" style="width: 100%; padding: 6px; font-size: 0.85rem; border: 1px solid var(--border-color); border-radius: 4px; font-weight: bold; text-align: center;">
-                <select class="opt-target" style="width: 100%; padding: 6px; font-size: 0.8rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-color);">
-                    ${dropdownHtml}
-                </select>
-            `;
-
-            midBox.querySelector('.opt-target').value = opt.target || 'start_loop';
-            midBox.querySelector('.opt-label').addEventListener('input', e => opt.label = e.target.value);
-            midBox.querySelector('.opt-target').addEventListener('change', e => {
-                opt.target = e.target.value;
-                renderTree(); // Mathematically rebuilds the entire tree instantly to account for new routing
-            });
-            midBox.querySelector('.delete-opt').addEventListener('click', () => {
-                if (confirm("Delete this logic branch?")) {
-                    node.options.splice(idx, 1);
-                    renderTree();
-                }
-            });
-
-            flowNodesContainer.appendChild(midBox);
-        });
-
-        // 3. Draw the Green "Add Option" Box (Exactly as sketched!)
-        const plusPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        const pCurve = `M ${coords.x} ${coords.y} C ${coords.x} ${coords.y - 120}, ${node.plusX} ${node.plusY + 60 + 120}, ${node.plusX} ${node.plusY + 60}`;
-        plusPath.setAttribute('d', pCurve);
-        plusPath.setAttribute('stroke', '#22c55e');
-        plusPath.setAttribute('stroke-width', '2');
-        plusPath.setAttribute('stroke-dasharray', '5,5');
-        plusPath.setAttribute('fill', 'none');
-        plusPath.setAttribute('marker-end', 'url(#arrowheadPlus)');
-        flowLines.appendChild(plusPath);
-
-        const plusBox = document.createElement('div');
-        plusBox.style.cssText = `
-            position: absolute; left: ${node.plusX}px; top: ${node.plusY}px; transform: translate(-50%, -100%);
-            width: 70px; height: 70px; background: rgba(34, 197, 94, 0.05); border: 2px dashed #22c55e;
-            border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; z-index: 5; transition: background 0.2s, transform 0.2s;
-        `;
-        plusBox.innerHTML = `
-            <span style="font-size: 2rem; font-weight: bold; color: #22c55e; line-height: 1;">+</span>
-            <span style="font-size: 0.6rem; color: #166534; text-align: center; margin-top: 2px; font-weight: bold;">Option</span>
-        `;
-
-        plusBox.addEventListener('mouseover', () => { plusBox.style.background = 'rgba(34, 197, 94, 0.15)'; plusBox.style.transform = 'translate(-50%, -100%) scale(1.05)'; });
-        plusBox.addEventListener('mouseout', () => { plusBox.style.background = 'rgba(34, 197, 94, 0.05)'; plusBox.style.transform = 'translate(-50%, -100%) scale(1)'; });
-
-        plusBox.addEventListener('click', () => {
-            const newId = 'node_' + Math.floor(Math.random() * 100000);
-            treeDraft[newId] = { title: "New Step", text: "", criteria: "", options: [] };
-            node.options.push({ label: "Option " + (node.options.length + 1), target: newId });
-            
-            renderTree();
-            
-            // Silky smooth pan to the newly created branch
-            setTimeout(() => {
-                const cx = layoutCoordinates[newId].x - (canvasViewport.clientWidth / 2);
-                const cy = layoutCoordinates[newId].y - (canvasViewport.clientHeight / 2);
-                canvasViewport.scrollTo({ left: cx, top: cy, behavior: 'smooth' });
-            }, 50);
-        });
-
-        flowNodesContainer.appendChild(plusBox);
-    });
-}
-
-// --- CANVAS PANNING CONTROLS ---
-let isPanning = false;
-let startPanX, startPanY, startScrollLeft, startScrollTop;
-
-canvasViewport.addEventListener('mousedown', (e) => {
-    // Only pan if clicking the empty background or an SVG line
-    if (e.target === canvasViewport || e.target === flowNodesContainer || e.target.tagName === 'svg') {
-        isPanning = true;
-        canvasViewport.style.cursor = 'grabbing';
-        startPanX = e.pageX;
-        startPanY = e.pageY;
-        startScrollLeft = canvasViewport.scrollLeft;
-        startScrollTop = canvasViewport.scrollTop;
-    }
-});
-
-document.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    e.preventDefault();
-    const walkX = (e.pageX - startPanX) * 1.5;
-    const walkY = (e.pageY - startPanY) * 1.5;
-    canvasViewport.scrollLeft = startScrollLeft - walkX;
-    canvasViewport.scrollTop = startScrollTop - walkY;
-});
-
-document.addEventListener('mouseup', () => {
-    isPanning = false;
-    canvasViewport.style.cursor = 'grab';
-});
-
-// Final Save Execution!
-document.getElementById('builderFinishBtn').addEventListener('click', () => {
-    const makeModel = document.getElementById('buildMakeModel').value.trim();
-    const airframeId = makeModel.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    
-    // Scrub the temporary UI coordinates to keep the JSON file lightweight
-    const cleanTree = JSON.parse(JSON.stringify(treeDraft));
-    Object.values(cleanTree).forEach(n => { delete n.treeWidth; delete n.plusX; delete n.plusY; });
-
-    const finalTree = {
-        category: document.getElementById('buildCategory').value,
-        makeModel: makeModel,
-        systemName: document.getElementById('buildSystemName').value.trim(),
-        nodes: cleanTree
-    };
-
-    const customFimData = JSON.parse(localStorage.getItem('customFimLibrary')) || {};
-    if (!customFimData[airframeId]) customFimData[airframeId] = { airframeName: makeModel, systems: {} };
-    
-    const uniqueId = "custom_" + Date.now();
-    customFimData[airframeId].systems[uniqueId] = finalTree;
-    
-    localStorage.setItem('customFimLibrary', JSON.stringify(customFimData));
-    if (typeof triggerHaptic === 'function') triggerHaptic('success');
-    
-    document.getElementById('fimBuilderUI').style.display = 'none';
-    document.getElementById('fimSelectorUI').style.display = 'flex';
-    initFimEngine(); 
-});
 
 // =========================================================================
 // 20. 14 CFR EXPLORER (INDEXED-DB ENGINE)
@@ -3652,7 +2960,7 @@ function renderCfrPart(partNum) {
     };
 }
 
-// Active Search: Bypasses hierarchy
+// Active Search: Bypasses hierarchy with Ctrl+F Highlighting
 function searchCFR(query) {
     if (!cfrDb) return;
     const q = query.toLowerCase().trim();
@@ -3678,9 +2986,9 @@ function searchCFR(query) {
         const allData = request.result;
         
         const matches = allData.filter(item => {
-            return item.section.toLowerCase().includes(q) || 
-                   item.title.toLowerCase().includes(q) || 
-                   item.text.toLowerCase().includes(q) ||
+            return String(item.section || '').toLowerCase().includes(q) || 
+                   String(item.title || '').toLowerCase().includes(q) || 
+                   String(item.text || '').toLowerCase().includes(q) ||
                    (`part ${item.part}` === q); 
         });
 
@@ -3691,6 +2999,11 @@ function searchCFR(query) {
             return;
         }
 
+        // HIGHLIGHT HELPER FUNCTION (Bulletproofed with String casting)
+        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const highlightRegex = new RegExp(`(${escapeRegExp(query.trim())})`, 'gi');
+        const highlightMatch = (text) => String(text || '').replace(highlightRegex, '<span style="background: var(--accent-color); color: white; padding: 0 3px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">$1</span>');
+
         const renderLimit = Math.min(matches.length, 50);
         for (let i = 0; i < renderLimit; i++) {
             const item = matches[i];
@@ -3700,18 +3013,34 @@ function searchCFR(query) {
             div.onmouseover = () => { div.style.transform = 'translateY(-2px)'; div.style.boxShadow = '0 4px 10px rgba(0,0,0,0.05)'; };
             div.onmouseout = () => { div.style.transform = 'translateY(0)'; div.style.boxShadow = 'none'; };
 
-            const snippet = item.text.length > 120 ? item.text.substring(0, 120) + '...' : item.text;
+            // SMART SNIPPET: Safely handles numbers and missing text
+            let rawSnippet = "";
+            const textStr = String(item.text || '');
+            const textMatchIndex = textStr.toLowerCase().indexOf(q);
+            
+            if (textMatchIndex > -1) {
+                const start = Math.max(0, textMatchIndex - 40);
+                const end = Math.min(textStr.length, textMatchIndex + query.length + 80);
+                rawSnippet = (start > 0 ? '...' : '') + textStr.substring(start, end) + (end < textStr.length ? '...' : '');
+            } else {
+                rawSnippet = textStr.length > 120 ? textStr.substring(0, 120) + '...' : textStr;
+            }
+
+            // APPLY HIGHLIGHTS
+            const highlightedSection = highlightMatch(item.section);
+            const highlightedTitle = highlightMatch(item.title);
+            const highlightedSnippet = highlightMatch(rawSnippet);
 
             div.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">§ ${item.section}</span>
+                    <span style="font-weight: bold; color: var(--primary-color); font-size: 1.1rem;">§ ${highlightedSection}</span>
                     <span style="font-size: 0.75rem; background: rgba(14, 165, 233, 0.1); color: var(--accent-color); padding: 3px 8px; border-radius: 12px; font-weight: bold;">Part ${item.part}</span>
                 </div>
-                <h4 style="color: var(--text-main); margin-bottom: 8px; font-size: 0.95rem;">${item.title}</h4>
-                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">${snippet}</p>
+                <h4 style="color: var(--text-main); margin-bottom: 8px; font-size: 0.95rem;">${highlightedTitle}</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin: 0;">${highlightedSnippet}</p>
             `;
             
-            div.addEventListener('click', () => openCfrModal(item));
+            div.addEventListener('click', () => openCfrModal(item, query));
             cfrResultsContainer.appendChild(div);
         }
     };
@@ -3725,18 +3054,26 @@ const cfrDetailTitle = document.getElementById('cfrDetailTitle');
 const cfrDetailText = document.getElementById('cfrDetailText');
 const closeCfrModalBtn = document.getElementById('closeCfrModalBtn');
 
-function openCfrModal(item) {
+function openCfrModal(item, highlightQuery = '') {
     if (typeof triggerHaptic === 'function') triggerHaptic('light');
     
     cfrDetailBadge.textContent = `Part ${item.part}`;
     cfrDetailSection.textContent = `§ ${item.section}`;
     cfrDetailTitle.textContent = item.title;
     
-    const paragraphs = item.text.split('\n\n');
+    const textStr = String(item.text || '');
+    const paragraphs = textStr.split('\n\n');
     let formattedHtml = '';
     
     paragraphs.forEach(p => {
         let styledP = p.replace(/^(\([a-zA-Z0-9]{1,3}\))\s*/, '<strong style="color: var(--accent-color); font-size: 1.1rem; margin-right: 6px;">$1</strong>');
+        
+        if (highlightQuery && highlightQuery.trim() !== '') {
+            const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const highlightRegex = new RegExp(`(${escapeRegExp(highlightQuery.trim())})`, 'gi');
+            styledP = styledP.replace(highlightRegex, '<span style="background: var(--accent-color); color: white; padding: 0 3px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">$1</span>');
+        }
+
         formattedHtml += `<p style="margin-bottom: 16px; padding-left: 28px; text-indent: -28px;">${styledP}</p>`;
     });
 
@@ -3762,26 +3099,19 @@ window.addEventListener('click', (e) => {
 });
 
 // --- 6. NAVIGATION LISTENERS ---
+
 if (cfrBackBtn) {
     cfrBackBtn.addEventListener('click', () => {
         if (typeof triggerHaptic === 'function') triggerHaptic('light');
-        cfrSearchInput.value = ''; 
+        if (cfrSearchInput) cfrSearchInput.value = ''; 
         renderCfrHome(); 
     });
 }
 
+// Re-wired the search bar listener to guarantee it fires
 if (cfrSearchInput) {
     cfrSearchInput.addEventListener('input', (e) => searchCFR(e.target.value));
 }
-
-// Modify the boot sequence to trigger the Home View
-const originalCheckDbStatus = checkDbStatus;
-checkDbStatus = function() {
-    originalCheckDbStatus();
-    if (cfrSearchInput && !cfrSearchInput.disabled && cfrSearchInput.value.trim() === '') {
-        renderCfrHome();
-    }
-};
 
 // Boot the database when the script loads
 initCfrDatabase();
