@@ -630,17 +630,22 @@ document.getElementById('calcMetalBtn').addEventListener('click', () => {
         default: pilotDrill = "--"; finalDrill = "Check Manual"; cleco = "N/A";
     }
 
-    let univED = d * 2;
-    let flushED = d * 2.5;
+    // NEW: Grab the user's requested ED Multiplier (2, 2.5, 3, or 4)
+    let edMult = parseFloat(document.getElementById('edMultiplier').value) || 3;
+    let customED = d * edMult;
 
     document.getElementById('outDiaDash').textContent = `-${dashDia} (${d.toFixed(3)}")`;
     document.getElementById('outLenDash').textContent = `-${Math.round((tTotal + (1.5 * d)) * 16)}`;
     document.getElementById('outPilot').textContent = pilotDrill;
     document.getElementById('outFinal').textContent = finalDrill;
     document.getElementById('outCleco').textContent = cleco;
-    document.getElementById('outUnivED').textContent = univED.toFixed(3) + '"';
-    document.getElementById('outFlushED').textContent = flushED.toFixed(3) + '"';
-    document.getElementById('rivetED').value = univED.toFixed(3);
+    
+    // Output the custom layout size
+    document.getElementById('outEdLabel').textContent = edMult + 'D';
+    document.getElementById('outCustomED').textContent = customED.toFixed(3) + '"';
+    
+    // Automatically push this exact dimension down to the Rivet Pitch calculator!
+    document.getElementById('rivetED').value = customED.toFixed(3);
 });
 
 document.getElementById('calcRivetBtn').addEventListener('click', () => {

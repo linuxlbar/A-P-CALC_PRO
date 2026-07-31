@@ -252,25 +252,36 @@
       <p><strong>New EWCG:</strong> <span id="altResCg">--</span> in</p>
     </div>
   </div>
+
 </section>
     <section class="calc-card" id="module-metal" style="display: none;">
   <h2>Sheet Metal Layout</h2>
-  
-  <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+
+<div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
     <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Dash Specs & Drill Sizes</h3>
     <div id="layers-container">
       <div class="input-group">
         <label>Layer 1 Thickness</label>
-        <input type="number" inputmode="decimal" class="layer-input" step="0.001"
-               data-hint="The thickness of the top piece of sheet metal (e.g., 0.032).">
+        <input type="number" inputmode="decimal" class="layer-input" step="0.001" data-hint="The thickness of the top piece of sheet metal (e.g., 0.032).">
       </div>
       <div class="input-group">
         <label>Layer 2 Thickness</label>
-        <input type="number" inputmode="decimal" class="layer-input" step="0.001"
-               data-hint="The thickness of the bottom piece of sheet metal (e.g., 0.040).">
+        <input type="number" inputmode="decimal" class="layer-input" step="0.001" data-hint="The thickness of the bottom piece of sheet metal (e.g., 0.040).">
       </div>
     </div>
     <button id="addLayerBtn" class="action-btn" style="background-color: var(--accent-color); margin-bottom: 10px;">+ Layer</button>
+
+    <!-- NEW: Adjustable ED Multiplier -->
+    <div class="input-group" style="margin-top: 5px; margin-bottom: 15px;">
+      <label>Edge Distance (ED) Layout</label>
+      <select id="edMultiplier" data-hint="Select your edge distance multiplier. 2D is minimum for Universal, 2.5D for Flush. Max is typically 4D.">
+        <option value="2">2D (Minimum Universal)</option>
+        <option value="2.5">2.5D (Minimum Flush)</option>
+        <option value="3" selected>3D (Standard Repair)</option>
+        <option value="4">4D (Maximum Edge)</option>
+      </select>
+    </div>
+
     <button id="calcMetalBtn" class="action-btn">Calculate Specs</button>
     <button class="action-btn local-clear-btn" style="background-color: var(--text-muted); margin-top: 10px;">Clear</button>
     
@@ -286,13 +297,17 @@
       </div>
       <p style="font-size: 0.85rem; color: var(--success-text); margin-bottom: 8px;">Cleco Color: <strong id="outCleco">--</strong></p>
       <hr style="border-top: 1px solid rgba(0,0,0,0.1); margin: 8px 0;">
-      <p style="font-size: 0.9rem; margin-bottom: 4px;"><strong>Minimum Edge Distance (ED)</strong></p>
+      
+      <!-- NEW: Dynamic ED Output -->
+      <p style="font-size: 0.9rem; margin-bottom: 4px;"><strong>Calculated Edge Distance (ED)</strong></p>
       <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
-        <span>Universal (2D): <strong id="outUnivED">--</strong></span>
-        <span>Flush (2.5D): <strong id="outFlushED">--</strong></span>
+        <span>Custom ED (<span id="outEdLabel">3D</span>):</span>
+        <strong id="outCustomED" style="color: var(--primary-color); font-size: 1.1rem;">--</strong>
       </div>
     </div>
   </div>
+
+    
 
   <div style="background-color: var(--bg-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
     <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--primary-color);">Even Rivet Spacing</h3>
@@ -1040,6 +1055,7 @@
 
       <div class="sub-tabs">
         <button class="sub-tab-btn active ref-tab-btn" data-filter="all">All</button>
+        <button class="sub-tab-btn ref-tab-btn" data-filter="constants">Constants</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="tools">Tool Drawer</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="wb">W&B</button>
         <button class="sub-tab-btn ref-tab-btn" data-filter="metal">Metal</button>
@@ -1051,6 +1067,36 @@
       </div>
 
       <div id="ref-content-container">
+
+          
+        <div class="ref-item" data-category="constants" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Aviation Constants</h3>
+          
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Fluid Weights</h4>
+          <table class="ref-table" style="margin-bottom: 15px;">
+            <tr><td><strong>AvGas (100LL)</strong></td><td>6.0 lbs / gal</td></tr>
+            <tr><td><strong>Jet A / Jet A-1</strong></td><td>6.7 lbs / gal</td></tr>
+            <tr><td><strong>Water</strong></td><td>8.35 lbs / gal</td></tr>
+            <tr><td><strong>Aviation Oil</strong></td><td>7.5 lbs / gal</td></tr>
+          </table>
+
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Standard Atmosphere (Sea Level)</h4>
+          <table class="ref-table" style="margin-bottom: 15px;">
+            <tr><td><strong>Pressure</strong></td><td>29.92 inHg / 1013.2 mb / 14.7 psi</td></tr>
+            <tr><td><strong>Temperature</strong></td><td>15°C / 59°F</td></tr>
+            <tr><td><strong>Speed of Sound</strong></td><td>661 knots / 761 mph</td></tr>
+            <tr><td><strong>Gravity</strong></td><td>32.2 ft/s² / 9.8 m/s²</td></tr>
+          </table>
+
+          <h4 style="font-size: 0.95rem; margin-bottom: 8px; color: var(--text-main);">Airframe & Hardware (FAA Standard)</h4>
+          <table class="ref-table" style="margin-bottom: 15px;">
+            <tr><td><strong>Plastics / Plexiglass Drill</strong></td><td>60°</td></tr>
+            <tr><td><strong>Soft Metal Drill (Pure Aluminum)</strong></td><td>90°</td></tr>
+            <tr><td><strong>Hard Metal Drill (Standard Steel)</strong></td><td>118°</td></tr>
+            <tr><td><strong>Specialty Hard Alloy (Stainless)</strong></td><td>135° - 140°</td></tr>
+            <tr><td><strong>AN426 Rivet Head (Countersink)</strong></td><td>100°</td></tr>
+          </table>
+        </div>
         
         <div class="ref-item" data-category="wb" style="background-color: var(--card-bg); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
           <h3 style="font-size: 1.1rem; margin-bottom: 10px; color: var(--primary-color);">Weight & Balance</h3>
